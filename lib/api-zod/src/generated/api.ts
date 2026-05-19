@@ -115,6 +115,7 @@ export const ListObjectsResponseItem = zod.object({
   "name": zod.string(),
   "code": zod.string(),
   "status": zod.string(),
+  "category": zod.string(),
   "createdAt": zod.string()
 })
 export const ListObjectsResponse = zod.array(ListObjectsResponseItem)
@@ -129,7 +130,8 @@ export const ListObjectsResponse = zod.array(ListObjectsResponseItem)
 export const CreateObjectBody = zod.object({
   "name": zod.string().min(1),
   "code": zod.string(),
-  "status": zod.string()
+  "status": zod.string(),
+  "category": zod.string().optional()
 })
 
 
@@ -146,7 +148,8 @@ export const UpdateObjectParams = zod.object({
 export const UpdateObjectBody = zod.object({
   "name": zod.string().min(1).optional(),
   "code": zod.string().optional(),
-  "status": zod.string().optional()
+  "status": zod.string().optional(),
+  "category": zod.string().optional()
 })
 
 export const UpdateObjectResponse = zod.object({
@@ -154,6 +157,7 @@ export const UpdateObjectResponse = zod.object({
   "name": zod.string(),
   "code": zod.string(),
   "status": zod.string(),
+  "category": zod.string(),
   "createdAt": zod.string()
 })
 

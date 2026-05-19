@@ -7,6 +7,7 @@ export const objectsTable = pgTable("work_objects", {
   name: text("name").notNull(),
   code: text("code").notNull().default("-"),
   status: text("status").notNull().default("active"),
+  category: text("category").notNull().default("standard"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -11,5 +11,6 @@ export interface WorkObject {
   name: string;
   code: string;
   status: string;
+  category: string;
   createdAt: string;
 }

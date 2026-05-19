@@ -11,4 +11,5 @@ export interface WorkObjectInput {
   name: string;
   code: string;
   status: string;
+  category?: string;
 }

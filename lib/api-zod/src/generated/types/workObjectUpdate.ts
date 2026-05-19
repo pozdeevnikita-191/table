@@ -11,4 +11,5 @@ export interface WorkObjectUpdate {
   name?: string;
   code?: string;
   status?: string;
+  category?: string;
 }

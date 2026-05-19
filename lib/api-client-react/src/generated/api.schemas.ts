@@ -58,6 +58,7 @@ export interface WorkObject {
   name: string;
   code: string;
   status: string;
+  category: string;
   createdAt: string;
 }
 
@@ -66,6 +67,7 @@ export interface WorkObjectInput {
   name: string;
   code: string;
   status: string;
+  category?: string;
 }
 
 export interface WorkObjectUpdate {
@@ -73,6 +75,7 @@ export interface WorkObjectUpdate {
   name?: string;
   code?: string;
   status?: string;
+  category?: string;
 }
 
 export interface Segment {
