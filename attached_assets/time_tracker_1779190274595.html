@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Учёт рабочего времени</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f0efe9;
+  --border: #e2e0d8;
+  --border2: #ccc9bf;
+  --text: #1a1916;
+  --text2: #6b6860;
+  --text3: #9c9a94;
+  --accent: #2c5f8a;
+  --accent-bg: #e8f0f8;
+  --accent-light: #d0e4f4;
+  --green: #2a7a4e;
+  --green-bg: #e6f5ed;
+  --red: #b83232;
+  --red-bg: #fbeaea;
+  --amber: #8a5a0a;
+  --amber-bg: #fef3dc;
+  --purple: #5a3e8a;
+  --purple-bg: #f0ebfb;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* Layout */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 10;
+}
+
+.sidebar-logo {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo h1 { font-size: 15px; font-weight: 700; color: var(--accent); }
+.sidebar-logo p { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.sidebar-nav { flex: 1; padding: 8px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  border-radius: 0;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); border-left-color: var(--accent); }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.nav-section { padding: 12px 16px 4px; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 5;
+}
+.topbar h2 { font-size: 16px; font-weight: 600; }
+.topbar-actions { display: flex; gap: 8px; }
+
+.content { padding: 24px; flex: 1; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn-primary {
+  background: var(--accent); color: white; border-color: var(--accent);
+}
+.btn-primary:hover { background: #245278; border-color: #245278; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger { color: var(--red); border-color: var(--red-bg); background: var(--red-bg); }
+.btn-danger:hover { background: #f5d5d5; }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface2); }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-body { padding: 20px; }
+
+/* Grid */
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Stat cards */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text); }
+.stat-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+/* Forms */
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 13px; font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s;
+  outline: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(44,95,138,0.12);
+}
+.form-textarea { resize: vertical; min-height: 64px; }
+
+/* Tags/Badges */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-blue { background: var(--accent-bg); color: var(--accent); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); }
+.badge-gray { background: var(--surface2); color: var(--text2); }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  text-align: left; padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--surface);
+  white-space: nowrap;
+}
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 15px; font-weight: 600; }
+.modal-body { padding: 20px; }
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+/* Day entry blocks */
+.day-entries { display: flex; flex-direction: column; gap: 6px; }
+.entry-row {
+  display: grid; align-items: center; gap: 8px;
+  grid-template-columns: 1fr auto auto auto auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+/* Calendar grid */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-header {
+  text-align: center; font-size: 11px;
+  font-weight: 600; color: var(--text3);
+  padding: 4px 0 8px;
+  text-transform: uppercase;
+}
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 52px;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+.cal-day:hover { border-color: var(--accent); background: var(--accent-bg); }
+.cal-day.today { border-color: var(--accent); border-width: 2px; }
+.cal-day.has-entries { background: var(--accent-bg); }
+.cal-day.has-vacation { background: var(--amber-bg); border-color: var(--amber); }
+.cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+.cal-day.other-month { opacity: 0.35; }
+.cal-day-num { font-size: 11px; font-weight: 600; color: var(--text2); }
+.cal-day.today .cal-day-num { color: var(--accent); }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 3px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab {
+  padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Chart bars */
+.chart-bar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding: 0; }
+.chart-bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+.chart-bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent-light); transition: all 0.3s; min-height: 2px; position: relative; }
+.chart-bar:hover { background: var(--accent); }
+.chart-bar-label { font-size: 10px; color: var(--text3); text-align: center; white-space: nowrap; }
+.chart-bar-val { font-size: 10px; color: var(--text2); font-weight: 600; }
+
+/* Avatar */
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text); color: white;
+  padding: 10px 16px; border-radius: var(--radius);
+  font-size: 13px; z-index: 200;
+  opacity: 0; transform: translateY(8px);
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* Misc */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 14px; }
+
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.mt-4 { margin-top: 4px; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.text-sm { font-size: 12px; }
+.text-muted { color: var(--text2); }
+.fw-600 { font-weight: 600; }
+.w-full { width: 100%; }
+
+/* Objects/sites page */
+.object-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+  box-shadow: var(--shadow); transition: box-shadow 0.15s;
+}
+.object-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.object-info h4 { font-size: 14px; font-weight: 600; }
+.object-info .code { font-size: 12px; color: var(--text3); font-family: monospace; margin-top: 2px; }
+.object-info .status { margin-top: 6px; }
+
+/* Page sections */
+.page { display: none; }
+.page.active { display: block; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar { width: 200px; transform: translateX(-100%); transition: transform 0.25s; }
+  .sidebar.open { transform: none; }
+  .main { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h1>⏱ Tabель</h1>
+    <p>Учёт рабочего времени</p>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Основное</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Дашборд
+    </div>
+    <div class="nav-item" onclick="showPage('fill')" id="nav-fill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="14" x2="12" y2="14" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="14" x2="16" y2="14" stroke-width="2.5" stroke-linecap="round"/></svg>
+      Заполнить день
+    </div>
+    <div class="nav-item" onclick="showPage('employees')" id="nav-employees">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Сотрудники
+    </div>
+    <div class="nav-item" onclick="showPage('objects')" id="nav-objects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="3 9 12 2 21 9 21 20 3 20"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Объекты
+    </div>
+    <div class="nav-section">Аналитика</div>
+    <div class="nav-item" onclick="showPage('reports')" id="nav-reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Отчёты
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <h2 id="topbar-title">Дашборд</h2>
+  <div class="topbar-actions" id="topbar-actions"></div>
+</div>
+
+<div class="content">
+
+<!-- DASHBOARD PAGE -->
+<div class="page active" id="page-dashboard">
+  <div class="grid grid-4 mb-16" id="stats-grid"></div>
+  <div class="grid grid-2" style="grid-template-columns: 1.4fr 1fr;">
+    <div class="card">
+      <div class="card-header"><span style="font-size:14px;font-weight:600;">Активность за месяц</span></div>
+      <div class="card-body" id="activity-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span style="font-size:14px;font-weight:600;">Топ объектов</span></div>
+      <div class="card-body" id="top-objects"></div>
+    </div>
+  </div>
+  <div class="card mt-16">
+    <div class="card-header">
+      <span style="font-size:14px;font-weight:600;">Последние записи</span>
+      <button class="btn btn-sm" onclick="showPage('fill')">+ Добавить</button>
+    </div>
+    <div class="table-wrap">
+      <table id="recent-table">
+        <thead><tr><th>Дата</th><th>Сотрудник</th><th>Объект</th><th>Начало</th><th>Конец</th><th>Часы</th></tr></thead>
+        <tbody id="recent-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- FILL DAY PAGE -->
+<div class="page" id="page-fill">
+  <div class="grid grid-2" style="grid-template-columns: 320px 1fr; align-items: start;">
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Сотрудник</label>
+          <select class="form-select" id="fill-employee" onchange="loadEmployeeEntries()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Дата</label>
+          <input type="date" class="form-input" id="fill-date" onchange="loadEmployeeEntries()">
+        </div>
+        <div class="form-group mb-8">
+          <label class="form-label">Тип дня</label>
+          <select class="form-select" id="fill-daytype" onchange="toggleDayType()">
+            <option value="work">Рабочий день</option>
+            <option value="vacation">Отпуск</option>
+            <option value="sick">Больничный</option>
+            <option value="off">Выходной</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="fill-work-section">
+      <div class="card-header">
+        <span style="font-size:14px;font-weight:600;">Записи за день</span>
+        <button class="btn btn-sm btn-primary" onclick="addEntryRow()">+ Добавить объект</button>
+      </div>
+      <div class="card-body">
+        <div id="day-entries-container"></div>
+        <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;" id="fill-actions">
+          <button class="btn btn-primary" onclick="saveDay()">💾 Сохранить день</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-16">
+    <div class="card-header">
+      <span style="font-size:14px;font-weight:600;" id="month-cal-title">Календарь</span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm btn-ghost" onclick="changeCalMonth(-1)">←</button>
+        <button class="btn btn-sm btn-ghost" onclick="changeCalMonth(1)">→</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="cal-grid" id="cal-headers"></div>
+      <div class="cal-grid mt-4" id="cal-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEES PAGE -->
+<div class="page" id="page-employees">
+  <div class="grid grid-3" id="employees-grid"></div>
+</div>
+
+<!-- EMPLOYEE STATS PAGE -->
+<div class="page" id="page-employee-stats">
+  <div id="emp-stats-content"></div>
+</div>
+
+<!-- OBJECTS PAGE -->
+<div class="page" id="page-objects">
+  <div class="grid grid-3" id="objects-grid"></div>
+</div>
+
+<!-- REPORTS PAGE -->
+<div class="page" id="page-reports">
+  <div class="card mb-16">
+    <div class="card-body">
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+          <label class="form-label">Сотрудник</label>
+          <select class="form-select" id="rep-employee">
+            <option value="">Все</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:130px;">
+          <label class="form-label">С</label>
+          <input type="date" class="form-input" id="rep-from">
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:130px;">
+          <label class="form-label">По</label>
+          <input type="date" class="form-input" id="rep-to">
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+          <label class="form-label">Объект</label>
+          <select class="form-select" id="rep-object">
+            <option value="">Все</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="generateReport()" style="padding:8px 18px;">Сформировать</button>
+        <button class="btn" onclick="exportCSV()" style="padding:8px 18px;">⬇ CSV</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="report-result">
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      <p>Выберите параметры и нажмите «Сформировать»</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" style="display:none;" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STATE =====================
+let state = {
+  employees: [],
+  objects: [],
+  entries: [],  // {id, employeeId, date, type, segments:[{objectId, start, end, note}]}
+};
+
+const COLORS = ['#2c5f8a','#2a7a4e','#8a3a2a','#5a3e8a','#7a5a0a','#2a5a7a','#6a2a5a'];
+const VACTYPE_LABELS = { work:'Рабочий', vacation:'Отпуск', sick:'Больничный', off:'Выходной' };
+
+// ===================== STORAGE =====================
+function save() {
+  try { localStorage.setItem('tabele_state', JSON.stringify(state)); } catch(e){}
+}
+function load() {
+  try {
+    const d = localStorage.getItem('tabele_state');
+    if (d) { state = JSON.parse(d); }
+  } catch(e){}
+  if (!state.employees) state.employees = [];
+  if (!state.objects) state.objects = [];
+  if (!state.entries) state.entries = [];
+  // Seed demo data if empty
+  if (state.employees.length === 0) seedDemo();
+}
+
+function seedDemo() {
+  state.employees = [
+    { id: 'emp1', name: 'Володькин Андрей', position: 'Монтажник', color: COLORS[0] },
+    { id: 'emp2', name: 'Федотов Денис', position: 'Монтажник', color: COLORS[1] },
+  ];
+  state.objects = [
+    { id: 'obj1', name: 'Д. Новая', code: '5114', status: 'active' },
+    { id: 'obj2', name: 'Знаменское', code: '3737', status: 'active' },
+    { id: 'obj3', name: 'Новоалексеевская', code: '5223', status: 'active' },
+    { id: 'obj4', name: 'Ленинградка 58', code: '5132', status: 'active' },
+    { id: 'obj5', name: 'Лихачева 18к5', code: '-', status: 'active' },
+    { id: 'obj6', name: 'Прайм парк (Оконечное обор.)', code: '5351', status: 'active' },
+    { id: 'obj7', name: 'Полянка 44. Лотос', code: '5147', status: 'active' },
+    { id: 'obj8', name: 'ЖК Золотой', code: '5357', status: 'active' },
+    { id: 'obj9', name: 'Вятская 41 А', code: '5338', status: 'active' },
+    { id: 'obj10', name: 'Поляны Фасад. Светильники', code: '5203', status: 'active' },
+    { id: 'obj11', name: 'Ладо', code: '5444', status: 'active' },
+    { id: 'obj12', name: 'Склад', code: '-', status: 'active' },
+    { id: 'obj13', name: 'Офис', code: '-', status: 'active' },
+    { id: 'obj14', name: 'Завидово', code: '2471', status: 'active' },
+  ];
+  // A few demo entries for current month
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth();
+  const fmt = d => d.toISOString().slice(0,10);
+  const days = [1,2,3,5,6,7,8,9,12,13,14,15,16];
+  days.forEach((d, i) => {
+    if (d > today.getDate()) return;
+    const dt = new Date(y, m, d);
+    if (dt.getDay() === 0 || dt.getDay() === 6) return;
+    state.entries.push({
+      id: 'e' + Date.now() + i,
+      employeeId: i % 2 === 0 ? 'emp1' : 'emp2',
+      date: fmt(dt),
+      type: 'work',
+      segments: [{ objectId: state.objects[i % state.objects.length].id, start: '09:00', end: '18:00', note: '' }]
+    });
+  });
+  save();
+}
+
+// ===================== NAVIGATION =====================
+let currentPage = 'dashboard';
+let calYear, calMonth, calEmployeeId;
+
+function showPage(page, extra) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  currentPage = page;
+  const titles = {
+    dashboard: 'Дашборд', fill: 'Заполнить день', employees: 'Сотрудники',
+    objects: 'Объекты', reports: 'Отчёты', 'employee-stats': 'Статистика сотрудника'
+  };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+  const actions = document.getElementById('topbar-actions');
+  actions.innerHTML = '';
+  if (page === 'employees') {
+    actions.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openAddEmployee()">+ Сотрудник</button>';
+  } else if (page === 'objects') {
+    actions.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openAddObject()">+ Объект</button>';
+  }
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'fill') renderFillPage(extra);
+  if (page === 'employees') renderEmployees();
+  if (page === 'objects') renderObjects();
+  if (page === 'reports') initReports();
+  if (page === 'employee-stats') renderEmployeeStats(extra);
+}
+
+// ===================== DASHBOARD =====================
+function renderDashboard() {
+  const now = new Date();
+  const monthStr = now.toISOString().slice(0,7);
+  const monthEntries = state.entries.filter(e => e.date.startsWith(monthStr));
+  const workDays = new Set(monthEntries.filter(e=>e.type==='work').map(e=>e.date+e.employeeId)).size;
+  const totalHours = monthEntries.filter(e=>e.type==='work').reduce((acc,e)=>{
+    return acc + e.segments.reduce((a,s)=>a+calcHours(s.start,s.end),0);
+  }, 0);
+  const objCount = state.objects.filter(o=>o.status==='active').length;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Сотрудников</div><div class="stat-value">${state.employees.length}</div><div class="stat-sub">в команде</div></div>
+    <div class="stat-card"><div class="stat-label">Объектов</div><div class="stat-value">${objCount}</div><div class="stat-sub">активных</div></div>
+    <div class="stat-card"><div class="stat-label">Рабочих дней</div><div class="stat-value">${workDays}</div><div class="stat-sub">в этом месяце</div></div>
+    <div class="stat-card"><div class="stat-label">Часов</div><div class="stat-value">${Math.round(totalHours)}</div><div class="stat-sub">в этом месяце</div></div>
+  `;
+
+  // Activity chart - last 14 days
+  const days = [];
+  for (let i=13; i>=0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  const hoursPerDay = days.map(d => {
+    const ents = state.entries.filter(e=>e.date===d && e.type==='work');
+    return ents.reduce((a,e)=>a+e.segments.reduce((b,s)=>b+calcHours(s.start,s.end),0),0);
+  });
+  const maxH = Math.max(...hoursPerDay, 1);
+  document.getElementById('activity-chart').innerHTML = `
+    <div class="chart-bar-wrap">
+      ${days.map((d,i)=>{
+        const h = hoursPerDay[i];
+        const pct = (h/maxH*100).toFixed(0);
+        const lbl = d.slice(5).replace('-','.');
+        return `<div class="chart-bar-col">
+          <div class="chart-bar-val">${h>0?Math.round(h):''}</div>
+          <div class="chart-bar" style="height:${pct}%;background:${h>0?'var(--accent-light)':'var(--border)'}"></div>
+          <div class="chart-bar-label">${lbl}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Top objects
+  const objHours = {};
+  state.entries.filter(e=>e.type==='work' && e.date.startsWith(monthStr)).forEach(e=>{
+    e.segments.forEach(s=>{
+      const h = calcHours(s.start,s.end);
+      objHours[s.objectId] = (objHours[s.objectId]||0) + h;
+    });
+  });
+  const sorted = Object.entries(objHours).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxO = sorted[0]?.[1]||1;
+  document.getElementById('top-objects').innerHTML = sorted.length ? sorted.map(([oid,h])=>{
+    const obj = state.objects.find(o=>o.id===oid);
+    const pct = (h/maxO*100).toFixed(0);
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+        <span style="font-weight:500;">${obj?.name||'Неизвестно'}</span>
+        <span style="color:var(--text2);">${Math.round(h)} ч</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;">
+        <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px;"></div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state" style="padding:20px 0;"><p>Нет данных за этот месяц</p></div>';
+
+  // Recent entries
+  const recent = [...state.entries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  document.getElementById('recent-tbody').innerHTML = recent.map(e=>{
+    const emp = state.employees.find(x=>x.id===e.employeeId);
+    const segs = e.type==='work' ? e.segments : [];
+    if (e.type !== 'work') {
+      return `<tr><td>${formatDate(e.date)}</td><td>${empAvatar(emp)}</td>
+        <td><span class="badge badge-amber">${VACTYPE_LABELS[e.type]}</span></td><td>—</td><td>—</td><td>—</td></tr>`;
+    }
+    return segs.map((s,i)=>{
+      const obj = state.objects.find(o=>o.id===s.objectId);
+      const h = calcHours(s.start,s.end);
+      return `<tr>
+        <td>${i===0?formatDate(e.date):''}</td>
+        <td>${i===0?empAvatar(emp):''}</td>
+        <td><span style="font-weight:500;">${obj?.name||'—'}</span>${obj?.code&&obj.code!=='-'?` <span style="font-size:11px;color:var(--text3);">#${obj.code}</span>`:''}</td>
+        <td>${s.start||'—'}</td><td>${s.end||'—'}</td>
+        <td><span class="badge badge-blue">${h>0?Math.round(h)+' ч':'—'}</span></td>
+      </tr>`;
+    }).join('');
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;">Нет записей</td></tr>';
+}
+
+function empAvatar(emp) {
+  if (!emp) return '—';
+  const initials = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  return `<div style="display:flex;align-items:center;gap:8px;">
+    <div class="avatar" style="background:${emp.color}22;color:${emp.color};width:28px;height:28px;font-size:11px;">${initials}</div>
+    <span style="font-size:13px;">${emp.name.split(' ').slice(0,2).join(' ')}</span>
+  </div>`;
+}
+
+// ===================== FILL DAY =====================
+let fillEntries = []; // temp segments for current editing
+
+function renderFillPage(opts) {
+  const empSel = document.getElementById('fill-employee');
+  empSel.innerHTML = state.employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  if (opts?.employeeId) empSel.value = opts.employeeId;
+
+  const dateInput = document.getElementById('fill-date');
+  if (!dateInput.value) dateInput.value = opts?.date || new Date().toISOString().slice(0,10);
+
+  loadEmployeeEntries();
+  initCal();
+}
+
+function loadEmployeeEntries() {
+  const empId = document.getElementById('fill-employee').value;
+  const date = document.getElementById('fill-date').value;
+  if (!empId || !date) return;
+
+  const existing = state.entries.find(e=>e.employeeId===empId && e.date===date);
+  const daytype = document.getElementById('fill-daytype');
+
+  if (existing) {
+    daytype.value = existing.type;
+    fillEntries = existing.segments ? [...existing.segments.map(s=>({...s}))] : [];
+  } else {
+    daytype.value = 'work';
+    fillEntries = [];
+  }
+  toggleDayType();
+  renderEntryRows();
+  if (calYear !== undefined) renderCal();
+}
+
+function toggleDayType() {
+  const t = document.getElementById('fill-daytype').value;
+  document.getElementById('fill-work-section').style.display = t==='work' ? '' : 'none';
+}
+
+function addEntryRow() {
+  fillEntries.push({ objectId: state.objects[0]?.id||'', start: '09:00', end: '18:00', note: '' });
+  renderEntryRows();
+}
+
+function renderEntryRows() {
+  const c = document.getElementById('day-entries-container');
+  if (!fillEntries.length) {
+    c.innerHTML = `<div class="empty-state" style="padding:20px 0;">
+      <p>Нет объектов. Нажмите «+ Добавить объект»</p>
+    </div>`;
+    return;
+  }
+  c.innerHTML = fillEntries.map((seg,i)=>`
+    <div class="entry-row mb-8" id="erow-${i}">
+      <select class="form-select" style="font-size:13px;" onchange="updateSeg(${i},'objectId',this.value)">
+        ${state.objects.map(o=>`<option value="${o.id}" ${o.id===seg.objectId?'selected':''}>${o.name}</option>`).join('')}
+      </select>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <input type="time" class="form-input" style="width:100px;" value="${seg.start||'09:00'}" onchange="updateSeg(${i},'start',this.value)">
+        <span style="color:var(--text3);">—</span>
+        <input type="time" class="form-input" style="width:100px;" value="${seg.end||'18:00'}" onchange="updateSeg(${i},'end',this.value)">
+      </div>
+      <div style="font-size:12px;color:var(--accent);font-weight:600;min-width:36px;">${calcHours(seg.start,seg.end)>0?calcHours(seg.start,seg.end)+'ч':''}</div>
+      <input type="text" class="form-input" style="width:120px;font-size:12px;" placeholder="Заметка" value="${seg.note||''}" onchange="updateSeg(${i},'note',this.value)">
+      <button class="btn btn-sm btn-danger" onclick="removeSegment(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function updateSeg(i, field, val) {
+  fillEntries[i][field] = val;
+  renderEntryRows();
+}
+
+function removeSegment(i) {
+  fillEntries.splice(i,1);
+  renderEntryRows();
+}
+
+function saveDay() {
+  const empId = document.getElementById('fill-employee').value;
+  const date = document.getElementById('fill-date').value;
+  const type = document.getElementById('fill-daytype').value;
+  if (!empId || !date) { showToast('Выберите сотрудника и дату'); return; }
+  if (type==='work' && !fillEntries.length) { showToast('Добавьте хотя бы один объект'); return; }
+
+  const idx = state.entries.findIndex(e=>e.employeeId===empId && e.date===date);
+  const entry = { id: idx>=0?state.entries[idx].id:'e'+Date.now(), employeeId:empId, date, type, segments: type==='work'?[...fillEntries]:[] };
+  if (idx>=0) state.entries[idx]=entry; else state.entries.push(entry);
+  save();
+  showToast('✓ День сохранён');
+  renderCal();
+}
+
+// ===================== CALENDAR =====================
+function initCal() {
+  const now = new Date();
+  if (calYear===undefined) { calYear=now.getFullYear(); calMonth=now.getMonth(); }
+  const empId = document.getElementById('fill-employee').value;
+  calEmployeeId = empId;
+  renderCal();
+}
+
+function changeCalMonth(dir) {
+  calMonth += dir;
+  if (calMonth < 0) { calMonth=11; calYear--; }
+  if (calMonth > 11) { calMonth=0; calYear++; }
+  renderCal();
+}
+
+function renderCal() {
+  const empId = document.getElementById('fill-employee').value;
+  calEmployeeId = empId;
+  const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  document.getElementById('month-cal-title').textContent = `${months[calMonth]} ${calYear}`;
+
+  const days = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  document.getElementById('cal-headers').innerHTML = days.map(d=>`<div class="cal-header">${d}</div>`).join('');
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay = new Date(calYear, calMonth+1, 0);
+  const startDow = (firstDay.getDay()+6)%7; // Mon=0
+  const today = new Date().toISOString().slice(0,10);
+  const selectedDate = document.getElementById('fill-date').value;
+
+  const cells = [];
+  for (let i=0;i<startDow;i++) cells.push({empty:true});
+  for (let d=1;d<=lastDay.getDate();d++) {
+    const dt = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const entry = empId ? state.entries.find(e=>e.employeeId===empId && e.date===dt) : null;
+    cells.push({ d, dt, entry });
+  }
+
+  document.getElementById('cal-grid').innerHTML = cells.map(c=>{
+    if (c.empty) return '<div class="cal-day empty"></div>';
+    let cls = 'cal-day';
+    if (c.dt===today) cls+=' today';
+    if (c.dt===selectedDate) cls+=' selected';
+    if (c.entry?.type==='vacation'||c.entry?.type==='sick'||c.entry?.type==='off') cls+=' has-vacation';
+    else if (c.entry) cls+=' has-entries';
+    const badge = c.entry && c.entry.type!=='work'
+      ? `<span style="font-size:9px;color:var(--amber);font-weight:600;">${c.entry.type==='vacation'?'ОТП':c.entry.type==='sick'?'БОЛЬН':'ВЫХ'}</span>`
+      : c.entry ? `<div class="cal-dot"></div>` : '';
+    return `<div class="${cls}" onclick="calDayClick('${c.dt}')">
+      <div class="cal-day-num">${c.d}</div>${badge}
+    </div>`;
+  }).join('');
+}
+
+function calDayClick(dt) {
+  document.getElementById('fill-date').value = dt;
+  loadEmployeeEntries();
+}
+
+// ===================== EMPLOYEES =====================
+function renderEmployees() {
+  document.getElementById('employees-grid').innerHTML = state.employees.map(emp=>{
+    const thisMonthEntries = state.entries.filter(e=>{
+      const m = new Date().toISOString().slice(0,7);
+      return e.employeeId===emp.id && e.date.startsWith(m) && e.type==='work';
+    });
+    const days = new Set(thisMonthEntries.map(e=>e.date)).size;
+    const hours = thisMonthEntries.reduce((a,e)=>a+e.segments.reduce((b,s)=>b+calcHours(s.start,s.end),0),0);
+    const initials = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    return `<div class="card" style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div class="avatar" style="background:${emp.color}22;color:${emp.color};width:44px;height:44px;font-size:16px;">${initials}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;">${emp.name}</div>
+          <div style="font-size:12px;color:var(--text3);">${emp.position||'Сотрудник'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div style="text-align:center;padding:8px;background:var(--surface2);border-radius:var(--radius);">
+          <div style="font-size:20px;font-weight:700;color:var(--accent);">${days}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:600;">дней</div>
+        </div>
+        <div style="text-align:center;padding:8px;background:var(--surface2);border-radius:var(--radius);">
+          <div style="font-size:20px;font-weight:700;color:var(--green);">${Math.round(hours)}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:600;">часов</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" style="flex:1;" onclick="showPage('employee-stats','${emp.id}')">📊 Статистика</button>
+        <button class="btn btn-sm" onclick="openFillForEmp('${emp.id}')">📝 Заполнить</button>
+        <button class="btn btn-sm btn-ghost" onclick="openEditEmployee('${emp.id}')">⚙</button>
+      </div>
+    </div>`;
+  }).join('') + `
+    <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:180px;border-style:dashed;" onclick="openAddEmployee()">
+      <div style="text-align:center;color:var(--text3);">
+        <div style="font-size:32px;margin-bottom:8px;">+</div>
+        <div style="font-size:13px;font-weight:500;">Добавить сотрудника</div>
+      </div>
+    </div>`;
+}
+
+function openAddEmployee() {
+  showModal('Новый сотрудник', `
+    <div class="form-group"><label class="form-label">Имя</label><input type="text" class="form-input" id="m-name" placeholder="Иванов Иван Иванович"></div>
+    <div class="form-group"><label class="form-label">Должность</label><input type="text" class="form-input" id="m-pos" placeholder="Монтажник"></div>
+    <div class="form-group"><label class="form-label">Цвет</label><input type="color" class="form-input" id="m-color" value="${COLORS[state.employees.length%COLORS.length]}" style="height:36px;padding:2px 6px;"></div>
+  `, ()=>{
+    const name = document.getElementById('m-name').value.trim();
+    if (!name) { showToast('Введите имя'); return false; }
+    state.employees.push({ id:'emp'+Date.now(), name, position:document.getElementById('m-pos').value.trim(), color:document.getElementById('m-color').value });
+    save(); renderEmployees(); return true;
+  });
+}
+
+function openEditEmployee(id) {
+  const emp = state.employees.find(e=>e.id===id);
+  if (!emp) return;
+  showModal('Редактировать сотрудника', `
+    <div class="form-group"><label class="form-label">Имя</label><input type="text" class="form-input" id="m-name" value="${emp.name}"></div>
+    <div class="form-group"><label class="form-label">Должность</label><input type="text" class="form-input" id="m-pos" value="${emp.position||''}"></div>
+    <div class="form-group"><label class="form-label">Цвет</label><input type="color" class="form-input" id="m-color" value="${emp.color}" style="height:36px;padding:2px 6px;"></div>
+    <hr class="divider">
+    <button class="btn btn-danger w-full" onclick="deleteEmployee('${id}')">🗑 Удалить сотрудника</button>
+  `, ()=>{
+    emp.name = document.getElementById('m-name').value.trim();
+    emp.position = document.getElementById('m-pos').value.trim();
+    emp.color = document.getElementById('m-color').value;
+    save(); renderEmployees(); return true;
+  });
+}
+
+function deleteEmployee(id) {
+  if (!confirm('Удалить сотрудника и все его записи?')) return;
+  state.employees = state.employees.filter(e=>e.id!==id);
+  state.entries = state.entries.filter(e=>e.employeeId!==id);
+  save(); closeModal(); renderEmployees();
+}
+
+function openFillForEmp(id) {
+  showPage('fill', { employeeId: id });
+}
+
+// ===================== EMPLOYEE STATS =====================
+function renderEmployeeStats(empId) {
+  const emp = state.employees.find(e=>e.id===empId);
+  if (!emp) { showPage('employees'); return; }
+  document.getElementById('topbar-title').textContent = emp.name;
+  const navEl = document.getElementById('nav-employees');
+  if (navEl) navEl.classList.add('active');
+
+  const actions = document.getElementById('topbar-actions');
+  actions.innerHTML = `<button class="btn btn-sm" onclick="showPage('employees')">← Назад</button>
+    <button class="btn btn-sm btn-primary" onclick="openFillForEmp('${empId}')">+ Заполнить день</button>`;
+
+  const entries = state.entries.filter(e=>e.employeeId===empId && e.type==='work');
+  const vacEntries = state.entries.filter(e=>e.employeeId===empId && e.type!=='work');
+
+  const totalDays = new Set(entries.map(e=>e.date)).size;
+  const totalHours = entries.reduce((a,e)=>a+e.segments.reduce((b,s)=>b+calcHours(s.start,s.end),0),0);
+  const vacDays = vacEntries.filter(e=>e.type==='vacation').length;
+
+  // By object
+  const objMap = {};
+  entries.forEach(e=>e.segments.forEach(s=>{
+    const h = calcHours(s.start, s.end);
+    if (!objMap[s.objectId]) objMap[s.objectId] = {days:new Set(), hours:0};
+    objMap[s.objectId].days.add(e.date);
+    objMap[s.objectId].hours += h;
+  }));
+  const objList = Object.entries(objMap).sort((a,b)=>b[1].hours-a[1].hours);
+
+  // By month
+  const monthMap = {};
+  entries.forEach(e=>{
+    const m = e.date.slice(0,7);
+    if (!monthMap[m]) monthMap[m]={days:new Set(),hours:0};
+    monthMap[m].days.add(e.date);
+    e.segments.forEach(s=>{ monthMap[m].hours += calcHours(s.start,s.end); });
+  });
+  const months = Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0]));
+
+  const initials = emp.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+
+  document.getElementById('emp-stats-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+      <div class="avatar" style="background:${emp.color}22;color:${emp.color};width:56px;height:56px;font-size:20px;">${initials}</div>
+      <div>
+        <h2 style="font-size:20px;font-weight:700;">${emp.name}</h2>
+        <p style="color:var(--text3);font-size:13px;">${emp.position||'Сотрудник'}</p>
+      </div>
+    </div>
+    <div class="grid grid-4 mb-16">
+      <div class="stat-card"><div class="stat-label">Рабочих дней</div><div class="stat-value">${totalDays}</div></div>
+      <div class="stat-card"><div class="stat-label">Всего часов</div><div class="stat-value">${Math.round(totalHours)}</div></div>
+      <div class="stat-card"><div class="stat-label">Объектов</div><div class="stat-value">${objList.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Дней отпуска</div><div class="stat-value">${vacDays}</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header"><span style="font-size:14px;font-weight:600;">По месяцам</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Месяц</th><th>Дней</th><th>Часов</th></tr></thead>
+            <tbody>${months.map(([m,v])=>`<tr>
+              <td><b>${formatMonth(m)}</b></td>
+              <td>${v.days.size}</td>
+              <td><span class="badge badge-blue">${Math.round(v.hours)} ч</span></td>
+            </tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--text3);">Нет данных</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span style="font-size:14px;font-weight:600;">По объектам</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Объект</th><th>Дней</th><th>Часов</th></tr></thead>
+            <tbody>${objList.map(([oid,v])=>{
+              const obj = state.objects.find(o=>o.id===oid);
+              return `<tr>
+                <td><b>${obj?.name||'—'}</b>${obj?.code&&obj.code!=='-'?`<br><span style="font-size:11px;color:var(--text3);">#${obj.code}</span>`:''}</td>
+                <td>${v.days.size}</td>
+                <td><span class="badge badge-green">${Math.round(v.hours)} ч</span></td>
+              </tr>`;
+            }).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--text3);">Нет данных</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-header"><span style="font-size:14px;font-weight:600;">Все записи</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Дата</th><th>Объект</th><th>Начало</th><th>Конец</th><th>Часов</th><th>Заметка</th><th></th></tr></thead>
+          <tbody>${[...state.entries].filter(e=>e.employeeId===empId).sort((a,b)=>b.date.localeCompare(a.date)).flatMap(e=>{
+            if (e.type!=='work') return [`<tr><td>${formatDate(e.date)}</td><td colspan="4"><span class="badge badge-amber">${VACTYPE_LABELS[e.type]}</span></td><td></td>
+              <td><button class="btn btn-sm btn-ghost" onclick="deleteEntry('${e.id}')">✕</button></td></tr>`];
+            return e.segments.map((s,i)=>{
+              const obj = state.objects.find(o=>o.id===s.objectId);
+              return `<tr>
+                <td>${i===0?formatDate(e.date):''}</td>
+                <td><b>${obj?.name||'—'}</b></td>
+                <td>${s.start||'—'}</td><td>${s.end||'—'}</td>
+                <td>${calcHours(s.start,s.end)>0?`<span class="badge badge-blue">${Math.round(calcHours(s.start,s.end))} ч</span>`:'—'}</td>
+                <td style="color:var(--text3);font-size:12px;">${s.note||''}</td>
+                ${i===0?`<td><button class="btn btn-sm btn-ghost" onclick="editEntryModal('${e.id}','${empId}')">✏</button><button class="btn btn-sm btn-ghost btn-danger" onclick="deleteEntry('${e.id}')">✕</button></td>`:'<td></td>'}
+              </tr>`;
+            });
+          }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">Нет записей</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function deleteEntry(id) {
+  if (!confirm('Удалить запись?')) return;
+  const e = state.entries.find(x=>x.id===id);
+  const empId = e?.employeeId;
+  state.entries = state.entries.filter(x=>x.id!==id);
+  save(); showToast('Запись удалена');
+  if (currentPage==='employee-stats') renderEmployeeStats(empId);
+  if (currentPage==='dashboard') renderDashboard();
+}
+
+function editEntryModal(entryId, empId) {
+  const entry = state.entries.find(e=>e.id===entryId);
+  if (!entry) return;
+  showPage('fill', { employeeId: empId, date: entry.date });
+}
+
+// ===================== OBJECTS =====================
+function renderObjects() {
+  document.getElementById('objects-grid').innerHTML = state.objects.map(obj=>{
+    const usageCount = state.entries.filter(e=>e.type==='work' && e.segments.some(s=>s.objectId===obj.id)).length;
+    return `<div class="object-card">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><polygon points="3 9 12 2 21 9 21 20 3 20"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="object-info" style="flex:1;min-width:0;">
+        <h4 style="word-break:break-word;">${obj.name}</h4>
+        ${obj.code&&obj.code!=='-'?`<div class="code">ЛЗ: ${obj.code}</div>`:''}
+        <div class="status mt-4"><span class="badge ${obj.status==='active'?'badge-green':'badge-gray'}">${obj.status==='active'?'Активный':'Закрыт'}</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">${usageCount} записей</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="btn btn-sm btn-ghost" onclick="openEditObject('${obj.id}')">✏</button>
+        <button class="btn btn-sm btn-ghost btn-danger" onclick="deleteObject('${obj.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('') + `
+    <div class="object-card" style="cursor:pointer;justify-content:center;min-height:80px;border-style:dashed;flex-direction:column;text-align:center;gap:4px;" onclick="openAddObject()">
+      <span style="font-size:24px;color:var(--text3);">+</span>
+      <span style="font-size:13px;font-weight:500;color:var(--text2);">Новый объект</span>
+    </div>`;
+}
+
+function openAddObject() {
+  showModal('Новый объект', `
+    <div class="form-group"><label class="form-label">Название</label><input type="text" class="form-input" id="m-oname" placeholder="Название объекта"></div>
+    <div class="form-group"><label class="form-label">Код ЛЗ</label><input type="text" class="form-input" id="m-ocode" placeholder="5114"></div>
+    <div class="form-group"><label class="form-label">Статус</label>
+      <select class="form-select" id="m-ostatus"><option value="active">Активный</option><option value="closed">Закрыт</option></select>
+    </div>
+  `, ()=>{
+    const name = document.getElementById('m-oname').value.trim();
+    if (!name) { showToast('Введите название'); return false; }
+    state.objects.push({ id:'obj'+Date.now(), name, code:document.getElementById('m-ocode').value.trim()||'-', status:document.getElementById('m-ostatus').value });
+    save(); renderObjects(); return true;
+  });
+}
+
+function openEditObject(id) {
+  const obj = state.objects.find(o=>o.id===id);
+  if (!obj) return;
+  showModal('Редактировать объект', `
+    <div class="form-group"><label class="form-label">Название</label><input type="text" class="form-input" id="m-oname" value="${obj.name}"></div>
+    <div class="form-group"><label class="form-label">Код ЛЗ</label><input type="text" class="form-input" id="m-ocode" value="${obj.code||''}"></div>
+    <div class="form-group"><label class="form-label">Статус</label>
+      <select class="form-select" id="m-ostatus">
+        <option value="active" ${obj.status==='active'?'selected':''}>Активный</option>
+        <option value="closed" ${obj.status==='closed'?'selected':''}>Закрыт</option>
+      </select>
+    </div>
+  `, ()=>{
+    obj.name = document.getElementById('m-oname').value.trim();
+    obj.code = document.getElementById('m-ocode').value.trim()||'-';
+    obj.status = document.getElementById('m-ostatus').value;
+    save(); renderObjects(); return true;
+  });
+}
+
+function deleteObject(id) {
+  const inUse = state.entries.some(e=>e.segments?.some(s=>s.objectId===id));
+  if (inUse && !confirm('Объект используется в записях. Всё равно удалить?')) return;
+  state.objects = state.objects.filter(o=>o.id!==id);
+  save(); renderObjects();
+}
+
+// ===================== REPORTS =====================
+function initReports() {
+  const rEmp = document.getElementById('rep-employee');
+  rEmp.innerHTML = '<option value="">Все сотрудники</option>' +
+    state.employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  const rObj = document.getElementById('rep-object');
+  rObj.innerHTML = '<option value="">Все объекты</option>' +
+    state.objects.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
+  // Default range: this month
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('rep-from').value = `${y}-${m}-01`;
+  document.getElementById('rep-to').value = now.toISOString().slice(0,10);
+}
+
+function generateReport() {
+  const empFilter = document.getElementById('rep-employee').value;
+  const objFilter = document.getElementById('rep-object').value;
+  const from = document.getElementById('rep-from').value;
+  const to = document.getElementById('rep-to').value;
+
+  let filtered = state.entries.filter(e => {
+    if (empFilter && e.employeeId !== empFilter) return false;
+    if (from && e.date < from) return false;
+    if (to && e.date > to) return false;
+    return true;
+  });
+
+  // Expand segments
+  let rows = [];
+  filtered.forEach(e => {
+    const emp = state.employees.find(x=>x.id===e.employeeId);
+    if (e.type !== 'work') {
+      rows.push({ date: e.date, empName: emp?.name||'—', objName: VACTYPE_LABELS[e.type], start:'—', end:'—', hours: 0, note:'' });
+      return;
+    }
+    e.segments.forEach(s=>{
+      if (objFilter && s.objectId !== objFilter) return;
+      const obj = state.objects.find(o=>o.id===s.objectId);
+      rows.push({ date:e.date, empName: emp?.name||'—', objName: obj?.name||'—', objCode: obj?.code||'', start: s.start||'—', end: s.end||'—', hours: calcHours(s.start,s.end), note:s.note||'' });
+    });
+  });
+  rows.sort((a,b)=>a.date.localeCompare(b.date)||a.empName.localeCompare(b.empName));
+
+  const totalHours = rows.reduce((a,r)=>a+r.hours,0);
+  const totalDays = new Set(rows.map(r=>r.date+'|'+r.empName)).size;
+
+  document.getElementById('report-result').innerHTML = `
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;gap:24px;">
+      <div><span style="font-size:12px;color:var(--text3);">Записей:</span> <b>${rows.length}</b></div>
+      <div><span style="font-size:12px;color:var(--text3);">Дней:</span> <b>${totalDays}</b></div>
+      <div><span style="font-size:12px;color:var(--text3);">Часов:</span> <b>${Math.round(totalHours)}</b></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Дата</th><th>Сотрудник</th><th>Объект</th><th>Начало</th><th>Конец</th><th>Часов</th><th>Заметка</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td>${formatDate(r.date)}</td>
+          <td>${r.empName}</td>
+          <td>${r.objName}${r.objCode&&r.objCode!=='-'?` <span style="font-size:11px;color:var(--text3);">#${r.objCode}</span>`:''}</td>
+          <td>${r.start}</td><td>${r.end}</td>
+          <td>${r.hours>0?`<span class="badge badge-blue">${Math.round(r.hours)} ч</span>`:'—'}</td>
+          <td style="font-size:12px;color:var(--text3);">${r.note}</td>
+        </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">Нет данных</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+let lastReportRows = [];
+function exportCSV() {
+  generateReport();
+  const empFilter = document.getElementById('rep-employee').value;
+  const from = document.getElementById('rep-from').value;
+  const to = document.getElementById('rep-to').value;
+  let rows = [];
+  state.entries.filter(e=>{
+    if (empFilter && e.employeeId!==empFilter) return false;
+    if (from && e.date<from) return false;
+    if (to && e.date>to) return false;
+    return true;
+  }).forEach(e=>{
+    const emp = state.employees.find(x=>x.id===e.employeeId);
+    if (e.type!=='work') { rows.push([e.date,emp?.name||'',VACTYPE_LABELS[e.type],'','','','']); return; }
+    e.segments.forEach(s=>{
+      const obj = state.objects.find(o=>o.id===s.objectId);
+      rows.push([e.date,emp?.name||'',obj?.name||'',obj?.code||'',s.start||'',s.end||'',calcHours(s.start,s.end)||'',s.note||'']);
+    });
+  });
+  const csv = ['Дата,Сотрудник,Объект,Код ЛЗ,Начало,Конец,Часов,Заметка', ...rows.map(r=>r.map(x=>'"'+String(x||'').replace(/"/g,'""')+'"').join(','))].join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='tabele.csv'; a.click();
+}
+
+// ===================== MODAL =====================
+let modalCallback = null;
+function showModal(title, body, onSave) {
+  modalCallback = onSave;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <h3>${title}</h3>
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">${body}</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="modalSave()">Сохранить</button>
+    </div>`;
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModal() { document.getElementById('modal-overlay').style.display='none'; }
+function closeModalOnOverlay(e) { if (e.target.id==='modal-overlay') closeModal(); }
+function modalSave() { if (modalCallback && modalCallback()!==false) closeModal(); }
+
+// ===================== UTILS =====================
+function calcHours(start, end) {
+  if (!start || !end || start==='—' || end==='—') return 0;
+  const [sh,sm]=(start||'').split(':').map(Number);
+  const [eh,em]=(end||'').split(':').map(Number);
+  if (isNaN(sh)||isNaN(eh)) return 0;
+  const diff = (eh*60+em)-(sh*60+sm);
+  return diff>0 ? diff/60 : 0;
+}
+
+function formatDate(dt) {
+  if (!dt) return '—';
+  const [y,m,d] = dt.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+const MONTH_NAMES = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+function formatMonth(ym) {
+  const [y,m] = ym.split('-');
+  return `${MONTH_NAMES[parseInt(m)-1]} ${y}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ===================== INIT =====================
+load();
+showPage('dashboard');
+</script>
+</body>
+</html>

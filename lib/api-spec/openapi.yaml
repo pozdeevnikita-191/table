@@ -1,22 +1,29 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Tabель — Work Time Tracking API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: employees
+    description: Employee management
+  - name: objects
+    description: Work objects/sites
+  - name: entries
+    description: Time entries
+  - name: stats
+    description: Dashboard and analytics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +31,626 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── EMPLOYEES ────────────────────────────────────────────────────────────────
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List all employees
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create a new employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/{id}:
+    patch:
+      operationId: updateEmployee
+      tags: [employees]
+      summary: Update employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEmployee
+      tags: [employees]
+      summary: Delete employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /employees/{id}/stats:
+    get:
+      operationId: getEmployeeStats
+      tags: [employees]
+      summary: Get employee statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeStats"
+        "404":
+          description: Not found
+
+  # ── OBJECTS ──────────────────────────────────────────────────────────────────
+  /objects:
+    get:
+      operationId: listObjects
+      tags: [objects]
+      summary: List all work objects
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkObject"
+    post:
+      operationId: createObject
+      tags: [objects]
+      summary: Create a new work object
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkObjectInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkObject"
+
+  /objects/{id}:
+    patch:
+      operationId: updateObject
+      tags: [objects]
+      summary: Update work object
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkObjectUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkObject"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteObject
+      tags: [objects]
+      summary: Delete work object
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── ENTRIES ──────────────────────────────────────────────────────────────────
+  /entries:
+    get:
+      operationId: listEntries
+      tags: [entries]
+      summary: List time entries with optional filters
+      parameters:
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: objectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Entry"
+    post:
+      operationId: createEntry
+      tags: [entries]
+      summary: Create or upsert a day entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+
+  /entries/{id}:
+    get:
+      operationId: getEntry
+      tags: [entries]
+      summary: Get entry by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateEntry
+      tags: [entries]
+      summary: Update a day entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntryUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteEntry
+      tags: [entries]
+      summary: Delete a day entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── STATS ─────────────────────────────────────────────────────────────────────
+  /stats/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Dashboard summary statistics
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: string
+          description: "Year-month in YYYY-MM format, defaults to current month"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /stats/report:
+    get:
+      operationId: getReport
+      tags: [stats]
+      summary: Generate filtered report rows
+      parameters:
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+        - name: objectId
+          in: query
+          schema:
+            type: integer
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportResult"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── EMPLOYEE ────────────────────────────────────────────────────────────────
+    Employee:
+      type: object
+      required: [id, name, position, color, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        position:
+          type: string
+        color:
+          type: string
+        createdAt:
+          type: string
+
+    EmployeeInput:
+      type: object
+      required: [name, position, color]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        position:
+          type: string
+        color:
+          type: string
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        position:
+          type: string
+        color:
+          type: string
+
+    EmployeeStats:
+      type: object
+      required: [employee, totalDays, totalHours, vacationDays, byObject, byMonth]
+      properties:
+        employee:
+          $ref: "#/components/schemas/Employee"
+        totalDays:
+          type: integer
+        totalHours:
+          type: number
+        vacationDays:
+          type: integer
+        byObject:
+          type: array
+          items:
+            $ref: "#/components/schemas/ObjectHours"
+        byMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthHours"
+
+    ObjectHours:
+      type: object
+      required: [objectId, objectName, days, hours]
+      properties:
+        objectId:
+          type: integer
+        objectName:
+          type: string
+        days:
+          type: integer
+        hours:
+          type: number
+
+    MonthHours:
+      type: object
+      required: [month, days, hours]
+      properties:
+        month:
+          type: string
+        days:
+          type: integer
+        hours:
+          type: number
+
+    # ── WORK OBJECT ─────────────────────────────────────────────────────────────
+    WorkObject:
+      type: object
+      required: [id, name, code, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+
+    WorkObjectInput:
+      type: object
+      required: [name, code, status]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        code:
+          type: string
+        status:
+          type: string
+
+    WorkObjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        code:
+          type: string
+        status:
+          type: string
+
+    # ── ENTRY ────────────────────────────────────────────────────────────────────
+    Segment:
+      type: object
+      required: [objectId, startTime, endTime]
+      properties:
+        objectId:
+          type: integer
+        startTime:
+          type: string
+        endTime:
+          type: string
+        note:
+          type: ["string", "null"]
+
+    Entry:
+      type: object
+      required: [id, employeeId, date, type, segments, createdAt]
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        date:
+          type: string
+        type:
+          type: string
+          enum: [work, vacation, sick, off]
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Segment"
+        createdAt:
+          type: string
+
+    EntryInput:
+      type: object
+      required: [employeeId, date, type]
+      properties:
+        employeeId:
+          type: integer
+        date:
+          type: string
+        type:
+          type: string
+          enum: [work, vacation, sick, off]
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Segment"
+
+    EntryUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [work, vacation, sick, off]
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Segment"
+
+    # ── DASHBOARD ────────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalEmployees, totalObjects, monthHours, monthDays, recentEntries, topObjects, activityByDay]
+      properties:
+        totalEmployees:
+          type: integer
+        totalObjects:
+          type: integer
+        monthHours:
+          type: number
+        monthDays:
+          type: integer
+        recentEntries:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecentEntry"
+        topObjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopObject"
+        activityByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayActivity"
+
+    RecentEntry:
+      type: object
+      required: [date, employeeName, objectName, startTime, endTime, hours]
+      properties:
+        date:
+          type: string
+        employeeName:
+          type: string
+        objectName:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        hours:
+          type: number
+
+    TopObject:
+      type: object
+      required: [objectId, objectName, hours]
+      properties:
+        objectId:
+          type: integer
+        objectName:
+          type: string
+        hours:
+          type: number
+
+    DayActivity:
+      type: object
+      required: [date, hours]
+      properties:
+        date:
+          type: string
+        hours:
+          type: number
+
+    # ── REPORT ───────────────────────────────────────────────────────────────────
+    ReportResult:
+      type: object
+      required: [rows, totalHours, totalDays]
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportRow"
+        totalHours:
+          type: number
+        totalDays:
+          type: integer
+
+    ReportRow:
+      type: object
+      required: [date, employeeName, objectName, objectCode, startTime, endTime, hours, note]
+      properties:
+        date:
+          type: string
+        employeeName:
+          type: string
+        objectName:
+          type: string
+        objectCode:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        hours:
+          type: number
+        note:
+          type: string

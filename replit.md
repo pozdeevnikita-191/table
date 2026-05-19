@@ -1,6 +1,6 @@
-# [Project name]
+# Tabель — Учёт рабочего времени
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Совместное приложение для учёта рабочего времени бригады монтажников. Все пользователи по ссылке видят общие данные в реальном времени.
 
 ## Run & Operate
 
@@ -14,31 +14,47 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- Frontend: React + Vite + Tailwind CSS v4 + shadcn/ui + recharts + wouter
+- API: Express 5 + Orval (OpenAPI codegen) → React Query hooks
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — API contract (source of truth)
+- `lib/db/src/schema/` — Drizzle DB schema (employees, work_objects, entries)
+- `lib/api-client-react/src/generated/` — auto-generated React Query hooks + Zod schemas
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/tabele/src/pages/` — React page components
+- `artifacts/tabele/src/components/Layout.tsx` — sidebar + header layout
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first: OpenAPI spec → Orval codegen → React Query hooks. Never write API client code by hand.
+- Entry upsert: POST `/api/entries` upserts by (employeeId + date) — saves re-checking existence on client.
+- Segments JSON: a single entry row stores multiple time segments (objectId, start, end, note) as JSONB.
+- Shared PostgreSQL: all users see live data — no auth, intended for team-internal use.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Дашборд** — monthly stats (hours, days, top objects, activity chart, recent entries)
+- **Заполнить день** — select employee + date, pick day type (work/vacation/sick/off), add time segments per object; calendar view shows filled days
+- **Сотрудники** — CRUD cards; click card → full stats page (by month, by object, all entries)
+- **Объекты** — CRUD cards with status (active/closed) and ЛЗ code
+- **Отчёты** — filter by employee, object, date range; download CSV export
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Language: Russian (all UI text in Russian)
+- Accent color: `#2c5f8a` (steel blue)
+- No authentication — shared link for the whole team
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run `pnpm --filter @workspace/api-spec run codegen` after any OpenAPI spec changes
+- Run `pnpm --filter @workspace/db run push` after schema changes (dev only)
+- Vite builds needs `PORT` and `BASE_PATH` from workflow env — use `typecheck` not `build` to verify
 
 ## Pointers
 
