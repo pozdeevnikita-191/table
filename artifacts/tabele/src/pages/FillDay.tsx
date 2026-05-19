@@ -100,7 +100,8 @@ export default function FillDay() {
       setSegments([DEFAULT_SEG()]);
     }
     setConfirmDelete(false);
-  }, [date, employeeId, monthEntries.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, employeeId, currentDateEntryKey]);
 
   function addSegment() {
     setSegments(s => [...s, DEFAULT_SEG()]);
@@ -162,6 +163,9 @@ export default function FillDay() {
     const [y, m, d] = date.split("-");
     return `${d}.${m}.${y}`;
   })();
+
+  const currentDateEntry = monthEntries.find(e => e.date === date);
+  const currentDateEntryKey = JSON.stringify(currentDateEntry ?? null);
 
   const regularSegs = segments.filter(s => !s.overtime);
   const overtimeSegs = segments.filter(s => s.overtime);
