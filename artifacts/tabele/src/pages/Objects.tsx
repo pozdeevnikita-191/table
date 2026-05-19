@@ -10,13 +10,14 @@ import {
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
 
-const CATEGORIES = [
-  { value: "standard", label: "Стандартный", color: "bg-primary/10 text-primary border-primary/30" },
-  { value: "regular",  label: "Регулярный",  color: "bg-orange-100 text-orange-700 border-orange-300" },
+const STATUSES = [
+  { value: "active",   label: "Активный",   cls: "bg-green-50 text-green-700 border-green-200" },
+  { value: "regular",  label: "Регулярный",  cls: "bg-orange-100 text-orange-700 border-orange-200" },
+  { value: "closed",   label: "Закрыт",      cls: "bg-muted text-muted-foreground border-border" },
 ];
 
-function categoryMeta(cat: string) {
-  return CATEGORIES.find(c => c.value === cat) ?? CATEGORIES[0];
+function statusMeta(s: string) {
+  return STATUSES.find(x => x.value === s) ?? STATUSES[0];
 }
 
 function ObjectModal({
@@ -24,20 +25,19 @@ function ObjectModal({
   onSave,
   onClose,
 }: {
-  initial?: { name: string; code: string; status: string; category?: string };
-  onSave: (data: { name: string; code: string; status: string; category: string }) => Promise<void>;
+  initial?: { name: string; code: string; status: string };
+  onSave: (data: { name: string; code: string; status: string }) => Promise<void>;
   onClose: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [code, setCode] = useState(initial?.code ?? "");
   const [status, setStatus] = useState(initial?.status ?? "active");
-  const [category, setCategory] = useState(initial?.category ?? "standard");
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
     if (!name.trim()) return;
     setSaving(true);
-    try { await onSave({ name: name.trim(), code: code.trim() || "-", status, category }); onClose(); }
+    try { await onSave({ name: name.trim(), code: code.trim() || "-", status }); onClose(); }
     finally { setSaving(false); }
   }
 
@@ -59,36 +59,21 @@ function ObjectModal({
             <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="5114"
               className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
           </div>
-
-          {/* Категория */}
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Категория</label>
-            <div className="flex gap-2">
-              {CATEGORIES.map(({ value, label }) => (
-                <button key={value} onClick={() => setCategory(value)}
-                  className={["flex-1 py-2.5 text-sm rounded-lg border font-medium transition-all",
-                    category === value
-                      ? value === "regular"
-                        ? "border-orange-400 bg-orange-100 text-orange-700"
-                        : "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:border-muted-foreground"
-                  ].join(" ")}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Статус */}
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Статус</label>
             <div className="flex gap-2">
-              {[["active", "Активный"], ["closed", "Закрыт"]].map(([val, lbl]) => (
-                <button key={val} onClick={() => setStatus(val)}
+              {STATUSES.map(({ value, label }) => (
+                <button key={value} onClick={() => setStatus(value)}
                   className={["flex-1 py-2.5 text-sm rounded-lg border font-medium transition-all",
-                    status === val ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40"
+                    status === value
+                      ? value === "regular"
+                        ? "border-orange-400 bg-orange-100 text-orange-700"
+                        : value === "active"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-gray-400 bg-gray-100 text-gray-600"
+                      : "border-border hover:border-muted-foreground text-muted-foreground"
                   ].join(" ")}>
-                  {lbl}
+                  {label}
                 </button>
               ))}
             </div>
@@ -116,7 +101,7 @@ export default function Objects() {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<(typeof objects)[0] | null>(null);
   const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const invalidate = () => qc.invalidateQueries({ queryKey: getListObjectsQueryKey() });
 
@@ -126,18 +111,17 @@ export default function Objects() {
   const filtered = objects.filter(o => {
     const q = search.trim().toLowerCase();
     const matchSearch = !q || o.name.toLowerCase().includes(q) || (o.code && o.code !== "-" && o.code.toLowerCase().includes(q));
-    const matchCat = filterCategory === "all" || (o as any).category === filterCategory;
-    return matchSearch && matchCat;
+    const matchStatus = filterStatus === "all" || o.status === filterStatus;
+    return matchSearch && matchStatus;
   });
 
-  const regularCount = objects.filter(o => (o as any).category === "regular").length;
-  const standardCount = objects.filter(o => (o as any).category !== "regular").length;
+  const countByStatus = (s: string) => objects.filter(o => o.status === s).length;
 
-  async function handleAdd(data: { name: string; code: string; status: string; category: string }) {
+  async function handleAdd(data: { name: string; code: string; status: string }) {
     await createObject.mutateAsync({ data });
     await invalidate();
   }
-  async function handleEdit(data: { name: string; code: string; status: string; category: string }) {
+  async function handleEdit(data: { name: string; code: string; status: string }) {
     if (!editing) return;
     await updateObject.mutateAsync({ id: editing.id, data });
     await invalidate();
@@ -172,26 +156,30 @@ export default function Objects() {
           )}
         </div>
 
-        {/* Фильтр по категории */}
+        {/* Фильтр по статусу */}
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setFilterCategory("all")}
+          <button onClick={() => setFilterStatus("all")}
             className={["px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
-              filterCategory === "all" ? "border-primary bg-primary text-white" : "border-border hover:border-primary/50"
+              filterStatus === "all" ? "border-primary bg-primary text-white" : "border-border hover:border-primary/50"
             ].join(" ")}>
             Все <span className="opacity-70 ml-1">{objects.length}</span>
           </button>
-          <button onClick={() => setFilterCategory("standard")}
-            className={["px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
-              filterCategory === "standard" ? "border-primary bg-primary text-white" : "border-border hover:border-primary/50"
-            ].join(" ")}>
-            Стандартные <span className="opacity-70 ml-1">{standardCount}</span>
-          </button>
-          <button onClick={() => setFilterCategory("regular")}
-            className={["px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
-              filterCategory === "regular" ? "border-orange-500 bg-orange-500 text-white" : "border-orange-200 text-orange-700 hover:border-orange-400"
-            ].join(" ")}>
-            🔁 Регулярные <span className="opacity-70 ml-1">{regularCount}</span>
-          </button>
+          {STATUSES.map(({ value, label }) => (
+            <button key={value} onClick={() => setFilterStatus(value)}
+              className={["px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                filterStatus === value
+                  ? value === "regular"
+                    ? "border-orange-500 bg-orange-500 text-white"
+                    : value === "active"
+                    ? "border-green-600 bg-green-600 text-white"
+                    : "border-gray-500 bg-gray-500 text-white"
+                  : value === "regular"
+                  ? "border-orange-200 text-orange-700 hover:border-orange-400"
+                  : "border-border hover:border-muted-foreground"
+              ].join(" ")}>
+              {label} <span className="opacity-70 ml-1">{countByStatus(value)}</span>
+            </button>
+          ))}
         </div>
 
         {search && (
@@ -207,8 +195,8 @@ export default function Objects() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map(obj => {
-              const cat = categoryMeta((obj as any).category ?? "standard");
-              const isRegular = (obj as any).category === "regular";
+              const sm = statusMeta(obj.status);
+              const isRegular = obj.status === "regular";
               return (
                 <div key={obj.id} className={["bg-card border rounded-xl p-3.5 shadow-sm flex items-start gap-3 transition-colors",
                   isRegular ? "border-orange-200 hover:border-orange-300" : "border-border hover:border-primary/30"
@@ -224,13 +212,8 @@ export default function Objects() {
                     <h4 className="text-sm font-semibold leading-snug break-words">{obj.name}</h4>
                     {obj.code && obj.code !== "-" && <div className="text-xs text-muted-foreground font-mono mt-0.5">ЛЗ: {obj.code}</div>}
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {isRegular && (
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
-                          🔁 Регулярный
-                        </span>
-                      )}
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${obj.status === "active" ? "bg-green-50 text-green-700" : "bg-muted text-muted-foreground"}`}>
-                        {obj.status === "active" ? "Активный" : "Закрыт"}
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${sm.cls}`}>
+                        {sm.label}
                       </span>
                       <span className="text-[11px] text-muted-foreground">{entryCountByObject(obj.id)} зап.</span>
                     </div>
@@ -254,7 +237,7 @@ export default function Objects() {
       </div>
 
       {showAdd && <ObjectModal onSave={handleAdd} onClose={() => setShowAdd(false)} />}
-      {editing && <ObjectModal initial={{ ...editing, category: (editing as any).category ?? "standard" }} onSave={handleEdit} onClose={() => setEditing(null)} />}
+      {editing && <ObjectModal initial={editing} onSave={handleEdit} onClose={() => setEditing(null)} />}
     </Layout>
   );
 }
