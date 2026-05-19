@@ -149,6 +149,8 @@ router.get("/stats/report", async (req, res): Promise<void> => {
   for (const entry of entries) {
     const emp = empById.get(entry.employeeId);
     if (entry.type !== "work") {
+      // Если фильтруем по объекту — отпуска/больничные не показываем
+      if (objectId != null) continue;
       rows.push({
         date: entry.date,
         employeeName: emp?.name ?? "—",
