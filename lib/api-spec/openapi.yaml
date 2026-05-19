@@ -334,6 +334,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardStats"
 
+  /stats/unfilled-days:
+    get:
+      operationId: getUnfilledDays
+      tags: [stats]
+      summary: Get working days with missing entries per employee
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+          description: "Number of past months to check (default: 3)"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnfilledDaysResult"
+
   /stats/report:
     get:
       operationId: getReport
@@ -644,6 +663,53 @@ components:
           type: number
         overtimeHours:
           type: number
+
+    # ── UNFILLED DAYS ────────────────────────────────────────────────────────────
+    UnfilledDaysResult:
+      type: object
+      required: [months]
+      properties:
+        months:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnfilledMonth"
+
+    UnfilledMonth:
+      type: object
+      required: [month, label, days]
+      properties:
+        month:
+          type: string
+        label:
+          type: string
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnfilledDay"
+
+    UnfilledDay:
+      type: object
+      required: [date, missingCount, totalEmployees, missingEmployees]
+      properties:
+        date:
+          type: string
+        missingCount:
+          type: integer
+        totalEmployees:
+          type: integer
+        missingEmployees:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingEmployee"
+
+    MissingEmployee:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
 
     # ── REPORT ───────────────────────────────────────────────────────────────────
     ReportResult:

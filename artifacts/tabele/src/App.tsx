@@ -9,6 +9,7 @@ import Employees from "@/pages/Employees";
 import EmployeeStats from "@/pages/EmployeeStats";
 import Objects from "@/pages/Objects";
 import Reports from "@/pages/Reports";
+import UnfilledDays from "@/pages/UnfilledDays";
 import NotFound from "@/pages/not-found";
 
 const CACHE_KEY = "tabele-qc";
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/employees/:id" component={EmployeeStats} />
       <Route path="/objects" component={Objects} />
       <Route path="/reports" component={Reports} />
+      <Route path="/unfilled" component={UnfilledDays} />
       <Route component={NotFound} />
     </Switch>
   );

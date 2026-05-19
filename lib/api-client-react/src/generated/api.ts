@@ -30,9 +30,11 @@ import type {
   EntryUpdate,
   GetDashboardStatsParams,
   GetReportParams,
+  GetUnfilledDaysParams,
   HealthStatus,
   ListEntriesParams,
   ReportResult,
+  UnfilledDaysResult,
   WorkObject,
   WorkObjectInput,
   WorkObjectUpdate
@@ -1230,6 +1232,90 @@ export function useGetDashboardStats<TData = Awaited<ReturnType<typeof getDashbo
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardStatsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetUnfilledDaysUrl = (params?: GetUnfilledDaysParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/stats/unfilled-days?${stringifiedParams}` : `/api/stats/unfilled-days`
+}
+
+/**
+ * @summary Get working days with missing entries per employee
+ */
+export const getUnfilledDays = async (params?: GetUnfilledDaysParams, options?: RequestInit): Promise<UnfilledDaysResult> => {
+
+  return customFetch<UnfilledDaysResult>(getGetUnfilledDaysUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUnfilledDaysQueryKey = (params?: GetUnfilledDaysParams,) => {
+    return [
+    `/api/stats/unfilled-days`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetUnfilledDaysQueryOptions = <TData = Awaited<ReturnType<typeof getUnfilledDays>>, TError = ErrorType<unknown>>(params?: GetUnfilledDaysParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnfilledDays>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnfilledDaysQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnfilledDays>>> = ({ signal }) => getUnfilledDays(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUnfilledDays>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUnfilledDaysQueryResult = NonNullable<Awaited<ReturnType<typeof getUnfilledDays>>>
+export type GetUnfilledDaysQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get working days with missing entries per employee
+ */
+
+export function useGetUnfilledDays<TData = Awaited<ReturnType<typeof getUnfilledDays>>, TError = ErrorType<unknown>>(
+ params?: GetUnfilledDaysParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnfilledDays>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUnfilledDaysQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

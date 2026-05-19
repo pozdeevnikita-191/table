@@ -335,6 +335,30 @@ export const GetDashboardStatsResponse = zod.object({
 
 
 /**
+ * @summary Get working days with missing entries per employee
+ */
+export const GetUnfilledDaysQueryParams = zod.object({
+  "months": zod.coerce.number().optional().describe('Number of past months to check (default: 3)')
+})
+
+export const GetUnfilledDaysResponse = zod.object({
+  "months": zod.array(zod.object({
+  "month": zod.string(),
+  "label": zod.string(),
+  "days": zod.array(zod.object({
+  "date": zod.string(),
+  "missingCount": zod.number(),
+  "totalEmployees": zod.number(),
+  "missingEmployees": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+}))
+}))
+}))
+})
+
+
+/**
  * @summary Generate filtered report rows
  */
 export const GetReportQueryParams = zod.object({

@@ -116,6 +116,68 @@ router.get("/stats/dashboard", async (req, res): Promise<void> => {
   });
 });
 
+const MONTH_NAMES_RU = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+
+router.get("/stats/unfilled-days", async (req, res): Promise<void> => {
+  const months = Math.min(Math.max(parseInt(req.query["months"] as string) || 3, 1), 12);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const startDate = new Date(today.getFullYear(), today.getMonth() - months + 1, 1);
+
+  const fromStr = startDate.toISOString().slice(0, 10);
+  const toStr = yesterday.toISOString().slice(0, 10);
+
+  const [employees, entries] = await Promise.all([
+    db.select({ id: employeesTable.id, name: employeesTable.name }).from(employeesTable),
+    db.select({ employeeId: entriesTable.employeeId, date: entriesTable.date })
+      .from(entriesTable)
+      .where(and(gte(entriesTable.date, fromStr), lte(entriesTable.date, toStr))),
+  ]);
+
+  if (employees.length === 0) { res.json({ months: [] }); return; }
+
+  const filled = new Set(entries.map(e => `${e.employeeId}_${e.date}`));
+
+  const monthMap = new Map<string, Array<{ date: string; missingCount: number; totalEmployees: number; missingEmployees: Array<{ id: number; name: string }> }>>();
+
+  const cur = new Date(startDate);
+  while (cur <= yesterday) {
+    const dow = cur.getDay(); // 0=Sun
+    if (dow !== 0) { // Mon-Sat
+      const dateStr = cur.toISOString().slice(0, 10);
+      const month = dateStr.slice(0, 7);
+      const missing = employees.filter(emp => !filled.has(`${emp.id}_${dateStr}`));
+      if (missing.length > 0) {
+        if (!monthMap.has(month)) monthMap.set(month, []);
+        monthMap.get(month)!.push({
+          date: dateStr,
+          missingCount: missing.length,
+          totalEmployees: employees.length,
+          missingEmployees: missing.map(e => ({ id: e.id, name: e.name })),
+        });
+      }
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  const result = Array.from(monthMap.entries())
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([month, days]) => {
+      const [y, m] = month.split("-").map(Number);
+      return {
+        month,
+        label: `${MONTH_NAMES_RU[m - 1]} ${y}`,
+        days: days.sort((a, b) => b.date.localeCompare(a.date)),
+      };
+    });
+
+  res.json({ months: result });
+});
+
 router.get("/stats/report", async (req, res): Promise<void> => {
   const parsed = GetReportQueryParams.safeParse(req.query);
   if (!parsed.success) {

@@ -178,6 +178,28 @@ export interface DashboardStats {
   activityByDay: DayActivity[];
 }
 
+export interface MissingEmployee {
+  id: number;
+  name: string;
+}
+
+export interface UnfilledDay {
+  date: string;
+  missingCount: number;
+  totalEmployees: number;
+  missingEmployees: MissingEmployee[];
+}
+
+export interface UnfilledMonth {
+  month: string;
+  label: string;
+  days: UnfilledDay[];
+}
+
+export interface UnfilledDaysResult {
+  months: UnfilledMonth[];
+}
+
 export interface ReportRow {
   date: string;
   employeeName: string;
@@ -212,6 +234,13 @@ export type GetDashboardStatsParams = {
  * Year-month in YYYY-MM format, defaults to current month
  */
 month?: string;
+};
+
+export type GetUnfilledDaysParams = {
+/**
+ * Number of past months to check (default: 3)
+ */
+months?: number;
 };
 
 export type GetReportParams = {
