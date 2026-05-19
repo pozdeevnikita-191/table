@@ -12,5 +12,6 @@ export interface WorkObject {
   code: string;
   status: string;
   category: string;
+  manager: string;
   createdAt: string;
 }

@@ -460,7 +460,7 @@ components:
     # ── WORK OBJECT ─────────────────────────────────────────────────────────────
     WorkObject:
       type: object
-      required: [id, name, code, status, category, createdAt]
+      required: [id, name, code, status, category, manager, createdAt]
       properties:
         id:
           type: integer
@@ -471,6 +471,8 @@ components:
         status:
           type: string
         category:
+          type: string
+        manager:
           type: string
         createdAt:
           type: string
@@ -488,6 +490,8 @@ components:
           type: string
         category:
           type: string
+        manager:
+          type: string
 
     WorkObjectUpdate:
       type: object
@@ -500,6 +504,8 @@ components:
         status:
           type: string
         category:
+          type: string
+        manager:
           type: string
 
     # ── ENTRY ────────────────────────────────────────────────────────────────────

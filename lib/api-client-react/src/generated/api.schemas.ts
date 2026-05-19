@@ -59,6 +59,7 @@ export interface WorkObject {
   code: string;
   status: string;
   category: string;
+  manager: string;
   createdAt: string;
 }
 
@@ -68,6 +69,7 @@ export interface WorkObjectInput {
   code: string;
   status: string;
   category?: string;
+  manager?: string;
 }
 
 export interface WorkObjectUpdate {
@@ -76,6 +78,7 @@ export interface WorkObjectUpdate {
   code?: string;
   status?: string;
   category?: string;
+  manager?: string;
 }
 
 export interface Segment {

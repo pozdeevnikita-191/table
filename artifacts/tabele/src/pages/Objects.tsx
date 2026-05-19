@@ -25,19 +25,20 @@ function ObjectModal({
   onSave,
   onClose,
 }: {
-  initial?: { name: string; code: string; status: string };
-  onSave: (data: { name: string; code: string; status: string }) => Promise<void>;
+  initial?: { name: string; code: string; status: string; manager?: string };
+  onSave: (data: { name: string; code: string; status: string; manager: string }) => Promise<void>;
   onClose: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [code, setCode] = useState(initial?.code ?? "");
   const [status, setStatus] = useState(initial?.status ?? "active");
+  const [manager, setManager] = useState(initial?.manager ?? "");
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
     if (!name.trim()) return;
     setSaving(true);
-    try { await onSave({ name: name.trim(), code: code.trim() || "-", status }); onClose(); }
+    try { await onSave({ name: name.trim(), code: code.trim() || "-", status, manager: manager.trim() }); onClose(); }
     finally { setSaving(false); }
   }
 
@@ -57,6 +58,11 @@ function ObjectModal({
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Код ЛЗ</label>
             <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="5114"
+              className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Руководитель проекта</label>
+            <input type="text" value={manager} onChange={e => setManager(e.target.value)} placeholder="Иванов И.И."
               className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
           </div>
           <div>
@@ -121,11 +127,11 @@ export default function Objects() {
 
   const countByStatus = (s: string) => objects.filter(o => o.status === s).length;
 
-  async function handleAdd(data: { name: string; code: string; status: string }) {
+  async function handleAdd(data: { name: string; code: string; status: string; manager: string }) {
     await createObject.mutateAsync({ data });
     await invalidate();
   }
-  async function handleEdit(data: { name: string; code: string; status: string }) {
+  async function handleEdit(data: { name: string; code: string; status: string; manager: string }) {
     if (!editing) return;
     await updateObject.mutateAsync({ id: editing.id, data });
     await invalidate();
@@ -215,6 +221,7 @@ export default function Objects() {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold leading-snug break-words">{obj.name}</h4>
                     {obj.code && obj.code !== "-" && <div className="text-xs text-muted-foreground font-mono mt-0.5">ЛЗ: {obj.code}</div>}
+                    {obj.manager && <div className="text-xs text-muted-foreground mt-0.5 truncate">РП: {obj.manager}</div>}
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${sm.cls}`}>
                         {sm.label}

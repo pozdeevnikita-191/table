@@ -90,23 +90,23 @@ export default function FillDay() {
           approvedBy: s.approvedBy ?? "",
         })));
       } else if (existing.type === "work") {
-        setSegments([{ ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+        setSegments([DEFAULT_SEG()]);
       } else {
         setSegments([]);
       }
     } else {
       setExistingEntryId(null);
       setDayType("work");
-      setSegments([{ ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+      setSegments([DEFAULT_SEG()]);
     }
     setConfirmDelete(false);
   }, [date, employeeId, monthEntries.length]);
 
   function addSegment() {
-    setSegments(s => [...s, { ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+    setSegments(s => [...s, DEFAULT_SEG()]);
   }
   function addOvertimeSegment() {
-    setSegments(s => [...s, { ...DEFAULT_OT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+    setSegments(s => [...s, DEFAULT_OT_SEG()]);
   }
   function removeSegment(i: number) {
     setSegments(s => s.filter((_, idx) => idx !== i));
@@ -146,7 +146,7 @@ export default function FillDay() {
       setExistingEntryId(null);
       setConfirmDelete(false);
       setDayType("work");
-      setSegments([{ ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+      setSegments([DEFAULT_SEG()]);
     } finally {
       setDeleting(false);
     }
@@ -426,7 +426,7 @@ function SegmentRow({
 }: {
   seg: Segment;
   index: number;
-  objects: Array<{ id: number; name: string }>;
+  objects: Array<{ id: number; name: string; manager: string }>;
   onUpdate: (i: number, field: keyof Segment, value: string | number | boolean) => void;
   onRemove?: () => void;
   isOvertime: boolean;
@@ -434,6 +434,16 @@ function SegmentRow({
   const hours = calcHours(seg.startTime, seg.endTime);
   const borderColor = isOvertime ? "border-orange-200 bg-orange-50/50" : "border-border bg-muted/30";
   const hoursBadge = isOvertime ? "bg-orange-100 text-orange-700" : "bg-primary/10 text-primary";
+
+  function handleObjectChange(objectId: number) {
+    onUpdate(index, "objectId", objectId);
+    if (isOvertime) {
+      const obj = objects.find(o => o.id === objectId);
+      if (obj?.manager) {
+        onUpdate(index, "approvedBy", obj.manager);
+      }
+    }
+  }
 
   return (
     <div className={`border rounded-xl p-3 ${borderColor}`}>
@@ -443,9 +453,9 @@ function SegmentRow({
           <select
             className="w-full px-2.5 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary"
             value={seg.objectId}
-            onChange={e => onUpdate(index, "objectId", Number(e.target.value))}
+            onChange={e => handleObjectChange(Number(e.target.value))}
           >
-            <option value={0}>— выбрать —</option>
+            <option value={0}>— наименование объекта —</option>
             {objects.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </div>
