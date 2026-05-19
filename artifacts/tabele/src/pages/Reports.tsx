@@ -61,7 +61,7 @@ export default function Reports() {
     from, to,
   } : undefined;
 
-  const { data: report, isLoading } = useGetReport(params, { query: { enabled: generate } });
+  const { data: report, isLoading } = useGetReport(params, { query: { enabled: generate } as any });
 
   function exportCSV() {
     if (!report) return;

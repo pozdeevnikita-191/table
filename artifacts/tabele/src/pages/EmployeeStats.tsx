@@ -9,8 +9,8 @@ export default function EmployeeStats() {
   const empId = Number(id);
   const qc = useQueryClient();
 
-  const { data, isLoading } = useGetEmployeeStats(empId, { query: { enabled: !!empId } });
-  const { data: entries = [] } = useListEntries({ employeeId: empId }, { query: { enabled: !!empId } });
+  const { data, isLoading } = useGetEmployeeStats(empId, { query: { enabled: !!empId } as any });
+  const { data: entries = [] } = useListEntries({ employeeId: empId }, { query: { enabled: !!empId } as any });
   const deleteEntry = useDeleteEntry();
 
   async function handleDelete(entryId: number) {

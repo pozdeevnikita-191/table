@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/Dashboard";
 import FillDay from "@/pages/FillDay";
+import Entries from "@/pages/Entries";
 import Employees from "@/pages/Employees";
 import EmployeeStats from "@/pages/EmployeeStats";
 import Objects from "@/pages/Objects";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/" component={() => <Redirect to="/dashboard" />} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/fill" component={FillDay} />
+      <Route path="/entries" component={Entries} />
       <Route path="/employees" component={Employees} />
       <Route path="/employees/:id" component={EmployeeStats} />
       <Route path="/objects" component={Objects} />

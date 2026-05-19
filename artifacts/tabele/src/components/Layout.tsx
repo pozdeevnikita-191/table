@@ -3,11 +3,12 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Дашборд", icon: DashboardIcon, shortLabel: "Главная" },
-  { href: "/fill",      label: "Заполнить день", icon: CalendarIcon, shortLabel: "День" },
-  { href: "/employees", label: "Сотрудники", icon: UsersIcon, shortLabel: "Люди" },
-  { href: "/objects",   label: "Объекты", icon: BuildingIcon, shortLabel: "Объекты" },
-  { href: "/reports",   label: "Отчёты", icon: BarChartIcon, shortLabel: "Отчёты" },
+  { href: "/dashboard", label: "Дашборд",        icon: DashboardIcon, shortLabel: "Главная", mobileNav: true },
+  { href: "/fill",      label: "Заполнить день", icon: CalendarIcon,  shortLabel: "День",    mobileNav: true },
+  { href: "/entries",   label: "Записи",          icon: ListIcon,      shortLabel: "Записи",  mobileNav: true },
+  { href: "/employees", label: "Сотрудники",      icon: UsersIcon,     shortLabel: "Люди",    mobileNav: true },
+  { href: "/reports",   label: "Отчёты",          icon: BarChartIcon,  shortLabel: "Отчёты",  mobileNav: true },
+  { href: "/objects",   label: "Объекты",         icon: BuildingIcon,  shortLabel: "Объекты", mobileNav: false },
 ];
 
 function DashboardIcon({ className }: { className?: string }) {
@@ -46,6 +47,16 @@ function BarChartIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className ?? "w-5 h-5"}>
       <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
       <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  );
+}
+function ListIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className ?? "w-5 h-5"}>
+      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
     </svg>
   );
 }
@@ -132,13 +143,13 @@ export function Layout({ children, title, actions }: {
         <div className="flex-1 py-2 overflow-y-auto">
           <div className="py-2">
             <div className="px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Основное</div>
-            {NAV_ITEMS.slice(0, 4).map(item => (
+            {NAV_ITEMS.filter(i => ["/dashboard", "/fill", "/entries", "/employees", "/objects"].includes(i.href)).map(item => (
               <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
             ))}
           </div>
           <div className="py-2">
             <div className="px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Аналитика</div>
-            {NAV_ITEMS.slice(4).map(item => (
+            {NAV_ITEMS.filter(i => ["/reports"].includes(i.href)).map(item => (
               <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
             ))}
           </div>
@@ -190,7 +201,7 @@ export function Layout({ children, title, actions }: {
 
       {/* Mobile bottom navigation — full width, items evenly spread */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 flex w-full" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        {NAV_ITEMS.map(item => (
+        {NAV_ITEMS.filter(i => i.mobileNav).map(item => (
           <BottomNavItem key={item.href} href={item.href} label={item.shortLabel} icon={item.icon} />
         ))}
       </nav>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "wouter";
 import {
   useListEmployees,
   useListObjects,
@@ -33,11 +34,16 @@ const DEFAULT_OT_SEG = (): Segment => ({
 
 export default function FillDay() {
   const qc = useQueryClient();
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const urlEmployeeId = params.get("employeeId") ? Number(params.get("employeeId")) : null;
+  const urlDate = params.get("date") ?? null;
+
   const { data: employees = [] } = useListEmployees();
   const { data: objects = [] } = useListObjects();
 
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
-  const [date, setDate] = useState(todayStr());
+  const [employeeId, setEmployeeId] = useState<number | null>(urlEmployeeId);
+  const [date, setDate] = useState(urlDate ?? todayStr());
   const [dayType, setDayType] = useState("work");
   const [segments, setSegments] = useState<Segment[]>([DEFAULT_SEG()]);
   const [saving, setSaving] = useState(false);
@@ -47,19 +53,20 @@ export default function FillDay() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
-  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const initialDate = urlDate ? new Date(urlDate + "T00:00:00") : new Date();
+  const [calYear, setCalYear] = useState(() => initialDate.getFullYear());
+  const [calMonth, setCalMonth] = useState(() => initialDate.getMonth());
 
   useEffect(() => {
     if (employees.length > 0 && employeeId === null) {
-      setEmployeeId(employees[0].id);
+      setEmployeeId(urlEmployeeId ?? employees[0].id);
     }
   }, [employees, employeeId]);
 
   const monthStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}`;
   const { data: monthEntries = [] } = useListEntries(
     employeeId ? { employeeId, from: `${monthStr}-01`, to: `${monthStr}-31` } : undefined,
-    { query: { enabled: !!employeeId } }
+    { query: { enabled: !!employeeId } as any }
   );
 
   const createEntry = useCreateEntry();
