@@ -32,32 +32,40 @@ function ObjectModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-card rounded-xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+      <div className="bg-card rounded-t-2xl sm:rounded-xl w-full sm:max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h3 className="font-semibold">{initial ? "Редактировать объект" : "Новый объект"}</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-full hover:bg-muted">✕</button>
         </div>
         <div className="p-5 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Название</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Название объекта" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Название объекта"
+              className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Код ЛЗ</label>
-            <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="5114" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="5114"
+              className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1.5">Статус</label>
-            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
-              <option value="active">Активный</option>
-              <option value="closed">Закрыт</option>
-            </select>
+            <div className="flex gap-2">
+              {[["active", "Активный"], ["closed", "Закрыт"]].map(([val, lbl]) => (
+                <button key={val} onClick={() => setStatus(val)}
+                  className={["flex-1 py-2.5 text-sm rounded-lg border font-medium transition-all",
+                    status === val ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40"
+                  ].join(" ")}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-border flex gap-2 justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors">Отмена</button>
-          <button onClick={handleSave} disabled={saving} className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50">
+        <div className="px-5 py-4 border-t border-border flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2.5 text-sm rounded-lg border border-border hover:bg-muted transition-colors">Отмена</button>
+          <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium">
             {saving ? "Сохранение..." : "Сохранить"}
           </button>
         </div>
@@ -86,13 +94,11 @@ export default function Objects() {
     await createObject.mutateAsync({ data });
     await invalidate();
   }
-
   async function handleEdit(data: { name: string; code: string; status: string }) {
     if (!editing) return;
     await updateObject.mutateAsync({ id: editing.id, data });
     await invalidate();
   }
-
   async function handleDelete(id: number) {
     if (!confirm("Удалить объект?")) return;
     await deleteObject.mutateAsync({ id });
@@ -101,42 +107,42 @@ export default function Objects() {
 
   return (
     <Layout title="Объекты" actions={
-      <button onClick={() => setShowAdd(true)} className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+      <button onClick={() => setShowAdd(true)} className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
         + Добавить
       </button>
     }>
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-4">
-          {[1,2,3,4,5,6].map(i => <div key={i} className="h-28 bg-muted animate-pulse rounded-xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {objects.map(obj => (
-            <div key={obj.id} className="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div key={obj.id} className="bg-card border border-border rounded-xl p-3.5 shadow-sm flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#2c5f8a" strokeWidth={1.8} className="w-4 h-4">
-                  <polygon points="3 9 12 2 21 9 21 20 3 20"/><polyline points="9 22 9 12 15 12 15 22"/>
+                  <polygon points="3 9 12 2 21 9 21 20 3 20" /><polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-semibold break-words leading-snug">{obj.name}</h4>
+                <h4 className="text-sm font-semibold leading-snug break-words">{obj.name}</h4>
                 {obj.code && obj.code !== "-" && <div className="text-xs text-muted-foreground font-mono mt-0.5">ЛЗ: {obj.code}</div>}
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-1.5">
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${obj.status === "active" ? "bg-green-50 text-green-700" : "bg-muted text-muted-foreground"}`}>
                     {obj.status === "active" ? "Активный" : "Закрыт"}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">{entryCountByObject(obj.id)} записей</span>
+                  <span className="text-[11px] text-muted-foreground">{entryCountByObject(obj.id)} зап.</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <button onClick={() => setEditing(obj)} className="text-muted-foreground hover:text-foreground text-xs px-1.5 py-1 rounded hover:bg-muted transition-colors">✏</button>
-                <button onClick={() => handleDelete(obj.id)} className="text-muted-foreground hover:text-destructive text-xs px-1.5 py-1 rounded hover:bg-destructive/10 transition-colors">✕</button>
+              <div className="flex flex-col gap-1 flex-shrink-0">
+                <button onClick={() => setEditing(obj)} className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors text-xs">✏</button>
+                <button onClick={() => handleDelete(obj.id)} className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-destructive rounded hover:bg-destructive/10 transition-colors text-xs">✕</button>
               </div>
             </div>
           ))}
           <button
             onClick={() => setShowAdd(true)}
-            className="bg-card border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/40 hover:text-primary transition-all min-h-[112px]"
+            className="bg-card border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/40 hover:text-primary transition-all min-h-[88px]"
           >
             <span className="text-2xl">+</span>
             <span className="text-sm font-medium">Новый объект</span>
