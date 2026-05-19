@@ -12,4 +12,7 @@ export interface Segment {
   endTime: string;
   /** @nullable */
   note?: string | null;
+  overtime?: boolean;
+  /** @nullable */
+  approvedBy?: string | null;
 }

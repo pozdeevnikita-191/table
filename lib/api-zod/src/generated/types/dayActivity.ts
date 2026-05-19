@@ -9,4 +9,5 @@
 export interface DayActivity {
   date: string;
   hours: number;
+  overtimeHours: number;
 }

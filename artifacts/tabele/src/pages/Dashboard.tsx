@@ -2,7 +2,7 @@ import { useGetDashboardStats } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
 import { formatDate, MONTH_NAMES } from "@/lib/utils";
 import { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Link } from "wouter";
 
 export default function Dashboard() {
@@ -21,21 +21,17 @@ export default function Dashboard() {
   const [y, m] = month.split("-").map(Number);
   const monthLabel = `${MONTH_NAMES[m - 1]} ${y}`;
 
+  const hasOvertime = data && data.monthOvertimeHours > 0;
+
   return (
     <Layout title="Дашборд">
       <div className="p-3 md:p-6 space-y-3 md:space-y-4">
 
-        {/* Month switcher — отдельный блок на мобильном */}
+        {/* Переключатель месяца */}
         <div className="flex items-center justify-between bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
-          <button
-            onClick={() => changeMonth(-1)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors text-lg"
-          >←</button>
+          <button onClick={() => changeMonth(-1)} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors text-lg">←</button>
           <span className="text-sm font-semibold">{monthLabel}</span>
-          <button
-            onClick={() => changeMonth(1)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors text-lg"
-          >→</button>
+          <button onClick={() => changeMonth(1)} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors text-lg">→</button>
         </div>
 
         {isLoading ? (
@@ -48,43 +44,58 @@ export default function Dashboard() {
           </div>
         ) : data ? (
           <>
-            {/* Stat cards — 2×2 на мобильном, 4 в ряд на десктопе */}
+            {/* Stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard label="Часов" value={Math.round(data.monthHours)} sub="за месяц" accent />
-              <StatCard label="Рабочих дней" value={data.monthDays} sub="в месяце" accent />
-              <StatCard label="Сотрудников" value={data.totalEmployees} sub="в команде" />
-              <StatCard label="Объектов" value={data.totalObjects} sub="активных" />
+              {/* Часы — обычные синие */}
+              <div className="bg-primary border border-primary rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="text-[10px] font-semibold text-white/70 uppercase tracking-wide mb-1">Часов</div>
+                <div className="text-2xl font-bold text-white">{Math.round(data.monthHours)}</div>
+                <div className="text-[11px] text-white/70 mt-0.5">за месяц</div>
+              </div>
+              {/* Переработки — оранжевые, показываем всегда */}
+              <div className="bg-orange-500 border border-orange-500 rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="text-[10px] font-semibold text-white/80 uppercase tracking-wide mb-1">Переработки</div>
+                <div className="text-2xl font-bold text-white">{Math.round(data.monthOvertimeHours)}</div>
+                <div className="text-[11px] text-white/80 mt-0.5">ч за месяц</div>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Рабочих дней</div>
+                <div className="text-2xl font-bold">{data.monthDays}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">в месяце</div>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-3 md:p-4 shadow-sm">
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Объектов</div>
+                <div className="text-2xl font-bold">{data.totalObjects}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">активных</div>
+              </div>
             </div>
 
-            {/* Активность */}
+            {/* Активность — стековый график с переработками */}
             <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-border">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                 <span className="text-sm font-semibold">Активность по дням</span>
+                {hasOvertime && (
+                  <div className="flex items-center gap-3 text-[11px]">
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#2c5f8a" }} />Осн.</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#f97316" }} />Перераб.</span>
+                  </div>
+                )}
               </div>
               <div className="p-3">
                 {data.activityByDay.length === 0 ? (
-                  <div className="h-24 flex items-center justify-center text-muted-foreground text-sm">
-                    Нет данных за этот месяц
-                  </div>
+                  <div className="h-24 flex items-center justify-center text-muted-foreground text-sm">Нет данных за этот месяц</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={130}>
-                    <BarChart
-                      data={data.activityByDay}
-                      margin={{ top: 4, right: 4, bottom: 0, left: -20 }}
-                    >
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fontSize: 9 }}
-                        tickFormatter={(v) => v.slice(8)}
-                        interval="preserveStartEnd"
-                      />
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={data.activityByDay} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                      <XAxis dataKey="date" tick={{ fontSize: 9 }} tickFormatter={(v) => v.slice(8)} interval="preserveStartEnd" />
                       <YAxis tick={{ fontSize: 9 }} width={28} />
                       <Tooltip
-                        formatter={(v: number) => [`${Math.round(v)} ч`, "Часов"]}
+                        formatter={(v: number, name: string) => [`${Math.round(v * 10) / 10} ч`, name === "hours" ? "Основные" : "Переработка"]}
                         labelFormatter={(l) => formatDate(l as string)}
                         contentStyle={{ fontSize: 11, borderRadius: 8 }}
                       />
-                      <Bar dataKey="hours" fill="#2c5f8a" radius={[3, 3, 0, 0]} maxBarSize={24} />
+                      <Bar dataKey="hours" stackId="a" fill="#2c5f8a" radius={[0, 0, 0, 0]} maxBarSize={24} />
+                      <Bar dataKey="overtimeHours" stackId="a" fill="#f97316" radius={[3, 3, 0, 0]} maxBarSize={24} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -108,10 +119,7 @@ export default function Dashboard() {
                         <span className="text-muted-foreground ml-2 flex-shrink-0">{Math.round(obj.hours)} ч</span>
                       </div>
                       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${(obj.hours / max) * 100}%`, background: "#2c5f8a", opacity: 1 - i * 0.12 }}
-                        />
+                        <div className="h-full rounded-full" style={{ width: `${(obj.hours / max) * 100}%`, background: "#2c5f8a", opacity: 1 - i * 0.12 }} />
                       </div>
                     </div>
                   );
@@ -128,22 +136,26 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              {/* Мобильный вид — карточки */}
+              {/* Мобильный вид */}
               <div className="md:hidden divide-y divide-border">
                 {data.recentEntries.length === 0 ? (
                   <p className="text-center text-muted-foreground text-sm py-8">Нет записей</p>
                 ) : data.recentEntries.map((row, i) => (
-                  <div key={i} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div key={i} className={`px-4 py-3 flex items-center justify-between gap-3 ${row.overtime ? "bg-orange-50/60" : ""}`}>
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold truncate">{row.objectName}</div>
+                      <div className="flex items-center gap-1.5">
+                        {row.overtime && <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">ОТ</span>}
+                        <span className="text-xs font-semibold truncate">{row.objectName}</span>
+                      </div>
                       <div className="text-[11px] text-muted-foreground mt-0.5">
                         {formatDate(row.date)} · {row.employeeName.split(" ")[0]}
+                        {row.overtime && row.approvedBy && <span className="text-orange-600"> · согл. {row.approvedBy}</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[11px] text-muted-foreground">{row.startTime}–{row.endTime}</span>
                       {row.hours > 0 && (
-                        <span className="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full">
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${row.overtime ? "bg-orange-100 text-orange-700" : "bg-primary/10 text-primary"}`}>
                           {Math.round(row.hours)} ч
                         </span>
                       )}
@@ -152,7 +164,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Десктопный вид — таблица */}
+              {/* Десктопный вид */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-[13px]">
                   <thead>
@@ -166,15 +178,25 @@ export default function Dashboard() {
                     {data.recentEntries.length === 0 ? (
                       <tr><td colSpan={6} className="text-center text-muted-foreground py-8 text-sm">Нет записей</td></tr>
                     ) : data.recentEntries.map((row, i) => (
-                      <tr key={i} className="hover:bg-muted/40 transition-colors">
+                      <tr key={i} className={`transition-colors ${row.overtime ? "bg-orange-50/50 hover:bg-orange-50" : "hover:bg-muted/40"}`}>
                         <td className="px-4 py-2.5 border-b border-border whitespace-nowrap">{formatDate(row.date)}</td>
                         <td className="px-4 py-2.5 border-b border-border font-medium">{row.employeeName.split(" ")[0]}</td>
-                        <td className="px-4 py-2.5 border-b border-border max-w-[150px] truncate">{row.objectName}</td>
+                        <td className="px-4 py-2.5 border-b border-border max-w-[150px]">
+                          <div className="flex items-center gap-1.5 truncate">
+                            {row.overtime && <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded flex-shrink-0">ОТ</span>}
+                            <span className="truncate">{row.objectName}</span>
+                          </div>
+                          {row.overtime && row.approvedBy && (
+                            <div className="text-[11px] text-orange-600 mt-0.5">согл. {row.approvedBy}</div>
+                          )}
+                        </td>
                         <td className="px-4 py-2.5 border-b border-border text-muted-foreground">{row.startTime}</td>
                         <td className="px-4 py-2.5 border-b border-border text-muted-foreground">{row.endTime}</td>
                         <td className="px-4 py-2.5 border-b border-border">
                           {row.hours > 0 && (
-                            <span className="bg-primary/10 text-primary text-[11px] font-semibold px-2 py-0.5 rounded-full">{Math.round(row.hours)} ч</span>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${row.overtime ? "bg-orange-100 text-orange-700" : "bg-primary/10 text-primary"}`}>
+                              {Math.round(row.hours)} ч
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -187,15 +209,5 @@ export default function Dashboard() {
         ) : null}
       </div>
     </Layout>
-  );
-}
-
-function StatCard({ label, value, sub, accent }: { label: string; value: number; sub: string; accent?: boolean }) {
-  return (
-    <div className={`border rounded-xl p-3 md:p-4 shadow-sm ${accent ? "bg-primary text-white border-primary" : "bg-card border-border"}`}>
-      <div className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${accent ? "text-white/70" : "text-muted-foreground"}`}>{label}</div>
-      <div className={`text-2xl font-bold ${accent ? "text-white" : ""}`}>{value}</div>
-      <div className={`text-[11px] mt-0.5 ${accent ? "text-white/70" : "text-muted-foreground"}`}>{sub}</div>
-    </div>
   );
 }

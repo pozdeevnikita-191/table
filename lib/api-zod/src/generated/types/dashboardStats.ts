@@ -13,6 +13,7 @@ export interface DashboardStats {
   totalEmployees: number;
   totalObjects: number;
   monthHours: number;
+  monthOvertimeHours: number;
   monthDays: number;
   recentEntries: RecentEntry[];
   topObjects: TopObject[];

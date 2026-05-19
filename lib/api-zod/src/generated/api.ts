@@ -176,6 +176,8 @@ export const ListEntriesQueryParams = zod.object({
   "objectId": zod.coerce.number().optional()
 })
 
+export const listEntriesResponseSegmentsItemOvertimeDefault = false;
+
 export const ListEntriesResponseItem = zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -185,7 +187,9 @@ export const ListEntriesResponseItem = zod.object({
   "objectId": zod.number(),
   "startTime": zod.string(),
   "endTime": zod.string(),
-  "note": zod.string().nullish()
+  "note": zod.string().nullish(),
+  "overtime": zod.boolean().default(listEntriesResponseSegmentsItemOvertimeDefault),
+  "approvedBy": zod.string().nullish()
 })),
   "createdAt": zod.string()
 })
@@ -195,6 +199,8 @@ export const ListEntriesResponse = zod.array(ListEntriesResponseItem)
 /**
  * @summary Create or upsert a day entry
  */
+export const createEntryBodySegmentsItemOvertimeDefault = false;
+
 export const CreateEntryBody = zod.object({
   "employeeId": zod.number(),
   "date": zod.string(),
@@ -203,7 +209,9 @@ export const CreateEntryBody = zod.object({
   "objectId": zod.number(),
   "startTime": zod.string(),
   "endTime": zod.string(),
-  "note": zod.string().nullish()
+  "note": zod.string().nullish(),
+  "overtime": zod.boolean().default(createEntryBodySegmentsItemOvertimeDefault),
+  "approvedBy": zod.string().nullish()
 })).optional()
 })
 
@@ -215,6 +223,8 @@ export const GetEntryParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const getEntryResponseSegmentsItemOvertimeDefault = false;
+
 export const GetEntryResponse = zod.object({
   "id": zod.number(),
   "employeeId": zod.number(),
@@ -224,7 +234,9 @@ export const GetEntryResponse = zod.object({
   "objectId": zod.number(),
   "startTime": zod.string(),
   "endTime": zod.string(),
-  "note": zod.string().nullish()
+  "note": zod.string().nullish(),
+  "overtime": zod.boolean().default(getEntryResponseSegmentsItemOvertimeDefault),
+  "approvedBy": zod.string().nullish()
 })),
   "createdAt": zod.string()
 })
@@ -237,15 +249,21 @@ export const UpdateEntryParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const updateEntryBodySegmentsItemOvertimeDefault = false;
+
 export const UpdateEntryBody = zod.object({
   "type": zod.enum(['work', 'vacation', 'sick', 'off']).optional(),
   "segments": zod.array(zod.object({
   "objectId": zod.number(),
   "startTime": zod.string(),
   "endTime": zod.string(),
-  "note": zod.string().nullish()
+  "note": zod.string().nullish(),
+  "overtime": zod.boolean().default(updateEntryBodySegmentsItemOvertimeDefault),
+  "approvedBy": zod.string().nullish()
 })).optional()
 })
+
+export const updateEntryResponseSegmentsItemOvertimeDefault = false;
 
 export const UpdateEntryResponse = zod.object({
   "id": zod.number(),
@@ -256,7 +274,9 @@ export const UpdateEntryResponse = zod.object({
   "objectId": zod.number(),
   "startTime": zod.string(),
   "endTime": zod.string(),
-  "note": zod.string().nullish()
+  "note": zod.string().nullish(),
+  "overtime": zod.boolean().default(updateEntryResponseSegmentsItemOvertimeDefault),
+  "approvedBy": zod.string().nullish()
 })),
   "createdAt": zod.string()
 })
@@ -281,6 +301,7 @@ export const GetDashboardStatsResponse = zod.object({
   "totalEmployees": zod.number(),
   "totalObjects": zod.number(),
   "monthHours": zod.number(),
+  "monthOvertimeHours": zod.number(),
   "monthDays": zod.number(),
   "recentEntries": zod.array(zod.object({
   "date": zod.string(),
@@ -288,7 +309,9 @@ export const GetDashboardStatsResponse = zod.object({
   "objectName": zod.string(),
   "startTime": zod.string(),
   "endTime": zod.string(),
-  "hours": zod.number()
+  "hours": zod.number(),
+  "overtime": zod.boolean(),
+  "approvedBy": zod.string().nullish()
 })),
   "topObjects": zod.array(zod.object({
   "objectId": zod.number(),
@@ -297,7 +320,8 @@ export const GetDashboardStatsResponse = zod.object({
 })),
   "activityByDay": zod.array(zod.object({
   "date": zod.string(),
-  "hours": zod.number()
+  "hours": zod.number(),
+  "overtimeHours": zod.number()
 }))
 })
 

@@ -5,7 +5,7 @@ import { GetDashboardStatsQueryParams, GetReportQueryParams } from "@workspace/a
 
 const router: IRouter = Router();
 
-type Segment = { objectId: number; startTime: string; endTime: string; note?: string | null };
+type Segment = { objectId: number; startTime: string; endTime: string; note?: string | null; overtime?: boolean; approvedBy?: string | null };
 
 const calcHours = (start: string, end: string): number => {
   if (!start || !end) return 0;
@@ -39,8 +39,10 @@ router.get("/stats/dashboard", async (req, res): Promise<void> => {
   const objById = new Map(objects.map(o => [o.id, o]));
 
   let monthHours = 0;
+  let monthOvertimeHours = 0;
   const monthWorkDays = new Set<string>();
   const dayHours = new Map<string, number>();
+  const dayOvertimeHours = new Map<string, number>();
   const objectHours = new Map<number, number>();
 
   for (const entry of monthEntries) {
@@ -49,14 +51,20 @@ router.get("/stats/dashboard", async (req, res): Promise<void> => {
     const segs = (entry.segments as unknown as Segment[]) ?? [];
     for (const seg of segs) {
       const h = calcHours(seg.startTime, seg.endTime);
-      monthHours += h;
-      dayHours.set(entry.date, (dayHours.get(entry.date) ?? 0) + h);
+      if (seg.overtime) {
+        monthOvertimeHours += h;
+        dayOvertimeHours.set(entry.date, (dayOvertimeHours.get(entry.date) ?? 0) + h);
+      } else {
+        monthHours += h;
+        dayHours.set(entry.date, (dayHours.get(entry.date) ?? 0) + h);
+      }
       objectHours.set(seg.objectId, (objectHours.get(seg.objectId) ?? 0) + h);
     }
   }
 
-  const activityByDay = Array.from(dayHours.entries())
-    .map(([date, hours]) => ({ date, hours }))
+  const allDates = new Set([...dayHours.keys(), ...dayOvertimeHours.keys()]);
+  const activityByDay = Array.from(allDates)
+    .map(date => ({ date, hours: dayHours.get(date) ?? 0, overtimeHours: dayOvertimeHours.get(date) ?? 0 }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const topObjects = Array.from(objectHours.entries())
@@ -69,7 +77,7 @@ router.get("/stats/dashboard", async (req, res): Promise<void> => {
     .slice(0, 5);
 
   const recentEntries: Array<{
-    date: string; employeeName: string; objectName: string; startTime: string; endTime: string; hours: number;
+    date: string; employeeName: string; objectName: string; startTime: string; endTime: string; hours: number; overtime: boolean; approvedBy: string | null;
   }> = [];
 
   const sortedEntries = [...allEntries]
@@ -90,6 +98,8 @@ router.get("/stats/dashboard", async (req, res): Promise<void> => {
         startTime: seg.startTime,
         endTime: seg.endTime,
         hours: calcHours(seg.startTime, seg.endTime),
+        overtime: seg.overtime ?? false,
+        approvedBy: seg.approvedBy ?? null,
       });
     }
   }
@@ -98,6 +108,7 @@ router.get("/stats/dashboard", async (req, res): Promise<void> => {
     totalEmployees: employees.length,
     totalObjects: objects.length,
     monthHours,
+    monthOvertimeHours,
     monthDays: monthWorkDays.size,
     recentEntries,
     topObjects,

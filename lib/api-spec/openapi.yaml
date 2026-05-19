@@ -509,6 +509,11 @@ components:
           type: string
         note:
           type: ["string", "null"]
+        overtime:
+          type: boolean
+          default: false
+        approvedBy:
+          type: ["string", "null"]
 
     Entry:
       type: object
@@ -560,13 +565,15 @@ components:
     # ── DASHBOARD ────────────────────────────────────────────────────────────────
     DashboardStats:
       type: object
-      required: [totalEmployees, totalObjects, monthHours, monthDays, recentEntries, topObjects, activityByDay]
+      required: [totalEmployees, totalObjects, monthHours, monthOvertimeHours, monthDays, recentEntries, topObjects, activityByDay]
       properties:
         totalEmployees:
           type: integer
         totalObjects:
           type: integer
         monthHours:
+          type: number
+        monthOvertimeHours:
           type: number
         monthDays:
           type: integer
@@ -585,7 +592,7 @@ components:
 
     RecentEntry:
       type: object
-      required: [date, employeeName, objectName, startTime, endTime, hours]
+      required: [date, employeeName, objectName, startTime, endTime, hours, overtime]
       properties:
         date:
           type: string
@@ -599,6 +606,10 @@ components:
           type: string
         hours:
           type: number
+        overtime:
+          type: boolean
+        approvedBy:
+          type: ["string", "null"]
 
     TopObject:
       type: object
@@ -613,11 +624,13 @@ components:
 
     DayActivity:
       type: object
-      required: [date, hours]
+      required: [date, hours, overtimeHours]
       properties:
         date:
           type: string
         hours:
+          type: number
+        overtimeHours:
           type: number
 
     # ── REPORT ───────────────────────────────────────────────────────────────────

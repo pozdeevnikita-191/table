@@ -13,4 +13,7 @@ export interface RecentEntry {
   startTime: string;
   endTime: string;
   hours: number;
+  overtime: boolean;
+  /** @nullable */
+  approvedBy?: string | null;
 }

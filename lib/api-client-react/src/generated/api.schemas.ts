@@ -81,6 +81,9 @@ export interface Segment {
   endTime: string;
   /** @nullable */
   note?: string | null;
+  overtime?: boolean;
+  /** @nullable */
+  approvedBy?: string | null;
 }
 
 export type EntryType = typeof EntryType[keyof typeof EntryType];
@@ -141,6 +144,9 @@ export interface RecentEntry {
   startTime: string;
   endTime: string;
   hours: number;
+  overtime: boolean;
+  /** @nullable */
+  approvedBy?: string | null;
 }
 
 export interface TopObject {
@@ -152,12 +158,14 @@ export interface TopObject {
 export interface DayActivity {
   date: string;
   hours: number;
+  overtimeHours: number;
 }
 
 export interface DashboardStats {
   totalEmployees: number;
   totalObjects: number;
   monthHours: number;
+  monthOvertimeHours: number;
   monthDays: number;
   recentEntries: RecentEntry[];
   topObjects: TopObject[];
