@@ -25,7 +25,7 @@ interface Segment {
 const DAYS_RU = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
 const DEFAULT_SEG = (): Segment => ({
-  objectId: 0, startTime: "10:00", endTime: "19:00", note: "", overtime: false, approvedBy: "",
+  objectId: 0, startTime: "10:00", endTime: "18:00", note: "", overtime: false, approvedBy: "",
 });
 
 const DEFAULT_OT_SEG = (): Segment => ({
