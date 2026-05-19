@@ -5,6 +5,7 @@ import {
   useListObjects,
   useListEntries,
   useCreateEntry,
+  useDeleteEntry,
   getListEntriesQueryKey,
   getGetDashboardStatsQueryKey,
 } from "@workspace/api-client-react";
@@ -42,6 +43,9 @@ export default function FillDay() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [existingEntryId, setExistingEntryId] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [calYear, setCalYear] = useState(() => new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
@@ -59,6 +63,7 @@ export default function FillDay() {
   );
 
   const createEntry = useCreateEntry();
+  const deleteEntry = useDeleteEntry();
   const entryDates = new Set(monthEntries.map(e => e.date));
   const vacDates = new Set(monthEntries.filter(e => e.type !== "work").map(e => e.date));
 
@@ -66,6 +71,7 @@ export default function FillDay() {
     if (!employeeId) return;
     const existing = monthEntries.find(e => e.date === date);
     if (existing) {
+      setExistingEntryId(existing.id);
       setDayType(existing.type);
       if (existing.type === "work" && existing.segments.length > 0) {
         setSegments(existing.segments.map((s: Segment) => ({
@@ -78,12 +84,16 @@ export default function FillDay() {
         })));
       } else if (existing.type === "work") {
         setSegments([{ ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+      } else {
+        setSegments([]);
       }
     } else {
+      setExistingEntryId(null);
       setDayType("work");
       setSegments([{ ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
     }
-  }, [date, employeeId]);
+    setConfirmDelete(false);
+  }, [date, employeeId, monthEntries.length]);
 
   function addSegment() {
     setSegments(s => [...s, { ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
@@ -119,6 +129,22 @@ export default function FillDay() {
     }
   }
 
+  async function handleDelete() {
+    if (!existingEntryId) return;
+    setDeleting(true);
+    try {
+      await deleteEntry.mutateAsync({ id: existingEntryId });
+      await qc.invalidateQueries({ queryKey: getListEntriesQueryKey() });
+      await qc.invalidateQueries({ queryKey: getGetDashboardStatsQueryKey() });
+      setExistingEntryId(null);
+      setConfirmDelete(false);
+      setDayType("work");
+      setSegments([{ ...DEFAULT_SEG(), objectId: objects[0]?.id ?? 0 }]);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const firstDay = new Date(calYear, calMonth, 1).getDay();
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
   const calDays: (number | null)[] = Array(firstDay).fill(null);
@@ -135,20 +161,76 @@ export default function FillDay() {
   const totalRegular = regularSegs.reduce((sum, s) => sum + calcHours(s.startTime, s.endTime), 0);
   const totalOvertime = overtimeSegs.reduce((sum, s) => sum + calcHours(s.startTime, s.endTime), 0);
 
+  const isEditing = !!existingEntryId;
+
   return (
     <Layout
       title="Заполнить день"
       actions={
-        <button
-          onClick={saveDay}
-          disabled={saving || !employeeId}
-          className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-        >
-          {saving ? "..." : saved ? "✓ Сохранено" : "Сохранить"}
-        </button>
+        <div className="flex items-center gap-2">
+          {isEditing && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="border border-destructive/40 text-destructive px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-destructive/10 transition-colors"
+            >
+              Удалить
+            </button>
+          )}
+          <button
+            onClick={saveDay}
+            disabled={saving || !employeeId}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {saving ? "..." : saved ? "✓ Сохранено" : isEditing ? "Обновить" : "Сохранить"}
+          </button>
+        </div>
       }
     >
+      {/* Диалог подтверждения удаления */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="bg-card border border-border rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <h3 className="text-base font-semibold mb-1">Удалить запись?</h3>
+            <p className="text-sm text-muted-foreground mb-5">
+              Запись за <strong>{selectedDateLabel}</strong> будет удалена без возможности восстановления.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="flex-1 border border-border rounded-xl py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 bg-destructive text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50"
+              >
+                {deleting ? "Удаление..." : "Удалить"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-3 md:p-6 space-y-3">
+
+        {/* Баннер «Редактирование» */}
+        {isEditing && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-amber-800 text-sm">
+              <span className="text-base">✏️</span>
+              <span className="font-medium">Редактирование записи за {selectedDateLabel}</span>
+            </div>
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-xs text-red-600 font-medium hover:underline"
+            >
+              Удалить запись
+            </button>
+          </div>
+        )}
+
         {/* ─── Контролы: сотрудник + дата + тип ─── */}
         <div className="bg-card border border-border rounded-xl shadow-sm p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -177,10 +259,15 @@ export default function FillDay() {
               <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Дата</label>
               <button
                 onClick={() => setShowCalendar(v => !v)}
-                className="w-full flex items-center justify-between px-3 py-2 border border-border rounded-lg text-sm bg-background hover:border-primary/50 transition-colors text-left"
+                className={["w-full flex items-center justify-between px-3 py-2 border rounded-lg text-sm bg-background hover:border-primary/50 transition-colors text-left",
+                  isEditing ? "border-amber-300" : "border-border"
+                ].join(" ")}
               >
                 <span className="font-medium">{selectedDateLabel}</span>
-                <span className="text-muted-foreground text-xs">{MONTH_NAMES[parseInt(date.split("-")[1]) - 1]}</span>
+                <div className="flex items-center gap-1.5">
+                  {isEditing && <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">запись есть</span>}
+                  <span className="text-muted-foreground text-xs">{MONTH_NAMES[parseInt(date.split("-")[1]) - 1]}</span>
+                </div>
               </button>
             </div>
 
@@ -246,6 +333,7 @@ export default function FillDay() {
                   );
                 })}
               </div>
+              <p className="text-[10px] text-muted-foreground mt-2 text-center">Дни с записями подсвечены — нажми для редактирования</p>
             </div>
           </div>
         )}
@@ -266,7 +354,12 @@ export default function FillDay() {
                 </button>
               </div>
               <div className="p-4 space-y-3">
-                {regularSegs.map((seg, localIdx) => {
+                {regularSegs.length === 0 && (
+                  <div className="text-center py-3 text-muted-foreground text-sm">
+                    <button onClick={addSegment} className="text-primary font-medium text-xs hover:underline">+ Добавить объект</button>
+                  </div>
+                )}
+                {regularSegs.map((seg) => {
                   const globalIdx = segments.indexOf(seg);
                   return (
                     <SegmentRow key={globalIdx} seg={seg} index={globalIdx} objects={objects}
@@ -302,7 +395,7 @@ export default function FillDay() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {overtimeSegs.map((seg, _localIdx) => {
+                    {overtimeSegs.map((seg) => {
                       const globalIdx = segments.indexOf(seg);
                       return (
                         <SegmentRow key={globalIdx} seg={seg} index={globalIdx} objects={objects}
@@ -330,7 +423,7 @@ export default function FillDay() {
           disabled={saving || !employeeId}
           className="w-full bg-primary text-white py-3 rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
-          {saving ? "Сохранение..." : saved ? "✓ Сохранено" : "Сохранить день"}
+          {saving ? "Сохранение..." : saved ? "✓ Сохранено" : isEditing ? "Обновить запись" : "Сохранить день"}
         </button>
       </div>
     </Layout>
@@ -396,7 +489,7 @@ function SegmentRow({
               value={seg.approvedBy} onChange={e => onUpdate(index, "approvedBy", e.target.value)} />
           </div>
         )}
-        <div className={isOvertime ? "col-span-2" : "col-span-2"}>
+        <div className="col-span-2">
           <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Заметка</label>
           <input type="text" placeholder="необязательно"
             className="w-full px-2.5 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary"
