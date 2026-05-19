@@ -191,7 +191,7 @@ export function Layout({ children, title, actions }: {
       </div>
 
       {/* Mobile bottom navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 flex items-stretch relative">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 flex items-stretch">
         {NAV_ITEMS.map(item => (
           <BottomNavItem key={item.href} href={item.href} label={item.shortLabel} icon={item.icon} />
         ))}
