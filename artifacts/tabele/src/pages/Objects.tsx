@@ -84,11 +84,19 @@ export default function Objects() {
 
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<(typeof objects)[0] | null>(null);
+  const [search, setSearch] = useState("");
 
   const invalidate = () => qc.invalidateQueries({ queryKey: getListObjectsQueryKey() });
 
   const entryCountByObject = (id: number) =>
     entries.filter(e => e.type === "work" && (e.segments as Array<{ objectId: number }>).some(s => s.objectId === id)).length;
+
+  const filtered = search.trim()
+    ? objects.filter(o => {
+        const q = search.trim().toLowerCase();
+        return o.name.toLowerCase().includes(q) || (o.code && o.code !== "-" && o.code.toLowerCase().includes(q));
+      })
+    : objects;
 
   async function handleAdd(data: { name: string; code: string; status: string }) {
     await createObject.mutateAsync({ data });
@@ -111,13 +119,36 @@ export default function Objects() {
         + Добавить
       </button>
     }>
+      {/* Поиск */}
+      <div className="mb-4 relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Поиск по названию или номеру ЛЗ..."
+          className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl text-sm bg-card shadow-sm focus:outline-none focus:border-primary transition-colors"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">✕</button>
+        )}
+      </div>
+
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />)}
         </div>
       ) : (
+        <>
+          {search && (
+            <p className="text-xs text-muted-foreground mb-3">
+              {filtered.length === 0 ? "Ничего не найдено" : `Найдено: ${filtered.length} из ${objects.length}`}
+            </p>
+          )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {objects.map(obj => (
+          {filtered.map(obj => (
             <div key={obj.id} className="bg-card border border-border rounded-xl p-3.5 shadow-sm flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#2c5f8a" strokeWidth={1.8} className="w-4 h-4">
@@ -148,6 +179,7 @@ export default function Objects() {
             <span className="text-sm font-medium">Новый объект</span>
           </button>
         </div>
+        </>
       )}
 
       {showAdd && <ObjectModal onSave={handleAdd} onClose={() => setShowAdd(false)} />}
