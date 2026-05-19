@@ -1,4 +1,4 @@
-import { Link, useRoute, useLocation } from "wouter";
+import { Link, useRoute } from "wouter";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -99,15 +99,17 @@ function BottomNavItem({ href, label, icon: Icon }: {
   const isActive = href === "/dashboard" ? (active || dashActive) : active;
 
   return (
-    <Link href={href}>
-      <div className={cn(
-        "flex flex-col items-center gap-0.5 py-2 px-1 transition-all cursor-pointer flex-1",
-        isActive ? "text-primary" : "text-muted-foreground"
-      )}>
-        <Icon className="w-5 h-5" />
-        <span className="text-[10px] font-medium leading-tight">{label}</span>
-        {isActive && <div className="absolute bottom-0 w-8 h-0.5 bg-primary rounded-t-full" />}
-      </div>
+    <Link
+      href={href}
+      className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 cursor-pointer transition-colors relative"
+    >
+      <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-primary" : "text-muted-foreground")} />
+      <span className={cn("text-[10px] font-medium leading-tight transition-colors", isActive ? "text-primary" : "text-muted-foreground")}>
+        {label}
+      </span>
+      {isActive && (
+        <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-b-full" />
+      )}
     </Link>
   );
 }
@@ -145,10 +147,7 @@ export function Layout({ children, title, actions }: {
 
       {/* Mobile drawer overlay */}
       {drawerOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setDrawerOpen(false)}
-        />
+        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setDrawerOpen(false)} />
       )}
       {/* Mobile slide-out drawer */}
       <nav className={cn(
@@ -175,7 +174,6 @@ export function Layout({ children, title, actions }: {
       <div className="flex-1 flex flex-col min-h-screen md:ml-[220px]">
         {/* Header */}
         <header className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
-          {/* Hamburger — mobile only */}
           <button
             className="md:hidden p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors flex-shrink-0"
             onClick={() => setDrawerOpen(true)}
@@ -187,11 +185,11 @@ export function Layout({ children, title, actions }: {
         </header>
 
         {/* Page content */}
-        <main className="p-3 md:p-6 flex-1 pb-20 md:pb-6">{children}</main>
+        <main className="flex-1 pb-16 md:pb-0">{children}</main>
       </div>
 
-      {/* Mobile bottom navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 flex items-stretch">
+      {/* Mobile bottom navigation — full width, items evenly spread */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30 flex w-full" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         {NAV_ITEMS.map(item => (
           <BottomNavItem key={item.href} href={item.href} label={item.shortLabel} icon={item.icon} />
         ))}
