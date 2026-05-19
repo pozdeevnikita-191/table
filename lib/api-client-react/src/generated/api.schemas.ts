@@ -186,12 +186,17 @@ export interface ReportRow {
   startTime: string;
   endTime: string;
   hours: number;
+  regularHours: number;
+  overtimeHours: number;
+  overtime: boolean;
   note: string;
 }
 
 export interface ReportResult {
   rows: ReportRow[];
   totalHours: number;
+  totalRegularHours: number;
+  totalOvertimeHours: number;
   totalDays: number;
 }
 

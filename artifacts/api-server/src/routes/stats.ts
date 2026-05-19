@@ -151,10 +151,12 @@ router.get("/stats/report", async (req, res): Promise<void> => {
 
   const rows: Array<{
     date: string; employeeName: string; objectName: string; objectCode: string;
-    startTime: string; endTime: string; hours: number; note: string;
+    startTime: string; endTime: string; hours: number; regularHours: number; overtimeHours: number; overtime: boolean; note: string;
   }> = [];
 
   let totalHours = 0;
+  let totalRegularHours = 0;
+  let totalOvertimeHours = 0;
   const uniqueDays = new Set<string>();
 
   for (const entry of entries) {
@@ -170,6 +172,9 @@ router.get("/stats/report", async (req, res): Promise<void> => {
         startTime: "—",
         endTime: "—",
         hours: 0,
+        regularHours: 0,
+        overtimeHours: 0,
+        overtime: false,
         note: "",
       });
       uniqueDays.add(`${entry.date}|${entry.employeeId}`);
@@ -181,7 +186,10 @@ router.get("/stats/report", async (req, res): Promise<void> => {
       if (objectId != null && seg.objectId !== objectId) continue;
       const obj = objById.get(seg.objectId);
       const h = calcHours(seg.startTime, seg.endTime);
+      const isOvertime = seg.overtime ?? false;
       totalHours += h;
+      if (isOvertime) totalOvertimeHours += h;
+      else totalRegularHours += h;
       uniqueDays.add(`${entry.date}|${entry.employeeId}`);
       rows.push({
         date: entry.date,
@@ -191,12 +199,15 @@ router.get("/stats/report", async (req, res): Promise<void> => {
         startTime: seg.startTime,
         endTime: seg.endTime,
         hours: h,
+        regularHours: isOvertime ? 0 : h,
+        overtimeHours: isOvertime ? h : 0,
+        overtime: isOvertime,
         note: seg.note ?? "",
       });
     }
   }
 
-  res.json({ rows, totalHours, totalDays: uniqueDays.size });
+  res.json({ rows, totalHours, totalRegularHours, totalOvertimeHours, totalDays: uniqueDays.size });
 });
 
 export default router;

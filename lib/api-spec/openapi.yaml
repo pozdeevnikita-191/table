@@ -648,7 +648,7 @@ components:
     # ── REPORT ───────────────────────────────────────────────────────────────────
     ReportResult:
       type: object
-      required: [rows, totalHours, totalDays]
+      required: [rows, totalHours, totalRegularHours, totalOvertimeHours, totalDays]
       properties:
         rows:
           type: array
@@ -656,12 +656,16 @@ components:
             $ref: "#/components/schemas/ReportRow"
         totalHours:
           type: number
+        totalRegularHours:
+          type: number
+        totalOvertimeHours:
+          type: number
         totalDays:
           type: integer
 
     ReportRow:
       type: object
-      required: [date, employeeName, objectName, objectCode, startTime, endTime, hours, note]
+      required: [date, employeeName, objectName, objectCode, startTime, endTime, hours, regularHours, overtimeHours, overtime, note]
       properties:
         date:
           type: string
@@ -677,5 +681,11 @@ components:
           type: string
         hours:
           type: number
+        regularHours:
+          type: number
+        overtimeHours:
+          type: number
+        overtime:
+          type: boolean
         note:
           type: string

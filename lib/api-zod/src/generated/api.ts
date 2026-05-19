@@ -353,9 +353,14 @@ export const GetReportResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "hours": zod.number(),
+  "regularHours": zod.number(),
+  "overtimeHours": zod.number(),
+  "overtime": zod.boolean(),
   "note": zod.string()
 })),
   "totalHours": zod.number(),
+  "totalRegularHours": zod.number(),
+  "totalOvertimeHours": zod.number(),
   "totalDays": zod.number()
 })
 

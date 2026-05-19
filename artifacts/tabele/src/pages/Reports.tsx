@@ -65,9 +65,9 @@ export default function Reports() {
 
   function exportCSV() {
     if (!report) return;
-    const header = "Дата,Сотрудник,Объект,Код ЛЗ,Начало,Конец,Часов,Заметка";
+    const header = "Дата,Сотрудник,Объект,Код ЛЗ,Начало,Конец,Рабочие часы,Переработки,Заметка";
     const rows = report.rows.map(r =>
-      [r.date, r.employeeName, r.objectName, r.objectCode, r.startTime, r.endTime, r.hours, r.note]
+      [r.date, r.employeeName, r.objectName, r.objectCode, r.startTime, r.endTime, r.regularHours || "", r.overtimeHours || "", r.note]
         .map(v => `"${String(v ?? "").replace(/"/g, '""')}"`)
         .join(",")
     );
@@ -193,22 +193,25 @@ export default function Reports() {
             <div className="px-4 py-3 border-b border-border flex flex-wrap gap-4 text-sm">
               <span><span className="text-muted-foreground">Записей:</span> <b>{report.rows.length}</b></span>
               <span><span className="text-muted-foreground">Дней:</span> <b>{report.totalDays}</b></span>
-              <span><span className="text-muted-foreground">Часов:</span> <b>{Math.round(report.totalHours)}</b></span>
+              <span><span className="text-muted-foreground">Рабочие ч.:</span> <b>{Math.round(report.totalRegularHours)}</b></span>
+              {report.totalOvertimeHours > 0 && (
+                <span><span className="text-orange-500 font-semibold">Переработки:</span> <b className="text-orange-600">{Math.round(report.totalOvertimeHours)}</b></span>
+              )}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
                 <thead>
                   <tr>
-                    {["Дата", "Сотрудник", "Объект", "№ ЛЗ", "Нач.", "Кон.", "Ч", "Заметка"].map(h => (
+                    {["Дата", "Сотрудник", "Объект", "№ ЛЗ", "Нач.", "Кон.", "Раб. ч.", "Перераб.", "Заметка"].map(h => (
                       <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide border-b border-border bg-muted/30 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {report.rows.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center text-muted-foreground py-8 text-sm">Нет данных</td></tr>
+                    <tr><td colSpan={9} className="text-center text-muted-foreground py-8 text-sm">Нет данных</td></tr>
                   ) : report.rows.map((row, i) => (
-                    <tr key={i} className="hover:bg-muted/40 transition-colors">
+                    <tr key={i} className={`hover:bg-muted/40 transition-colors ${row.overtime ? "bg-orange-50/40" : ""}`}>
                       <td className="px-3 py-2.5 border-b border-border whitespace-nowrap">{formatDate(row.date)}</td>
                       <td className="px-3 py-2.5 border-b border-border font-medium whitespace-nowrap">{row.employeeName.split(" ")[0]}</td>
                       <td className="px-3 py-2.5 border-b border-border max-w-[140px] truncate font-medium">{row.objectName}</td>
@@ -222,7 +225,10 @@ export default function Reports() {
                       <td className="px-3 py-2.5 border-b border-border text-muted-foreground">{row.startTime}</td>
                       <td className="px-3 py-2.5 border-b border-border text-muted-foreground">{row.endTime}</td>
                       <td className="px-3 py-2.5 border-b border-border">
-                        {row.hours > 0 && <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">{Math.round(row.hours)}</span>}
+                        {row.regularHours > 0 && <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">{Math.round(row.regularHours * 10) / 10}</span>}
+                      </td>
+                      <td className="px-3 py-2.5 border-b border-border">
+                        {row.overtimeHours > 0 && <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{Math.round(row.overtimeHours * 10) / 10}</span>}
                       </td>
                       <td className="px-3 py-2.5 border-b border-border text-muted-foreground text-[11px] max-w-[100px] truncate">{row.note}</td>
                     </tr>

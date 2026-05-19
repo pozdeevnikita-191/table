@@ -10,5 +10,7 @@ import type { ReportRow } from './reportRow';
 export interface ReportResult {
   rows: ReportRow[];
   totalHours: number;
+  totalRegularHours: number;
+  totalOvertimeHours: number;
   totalDays: number;
 }
