@@ -74,6 +74,9 @@ export default function FillDay() {
   const entryDates = new Set(monthEntries.map(e => e.date));
   const vacDates = new Set(monthEntries.filter(e => e.type !== "work").map(e => e.date));
 
+  const currentDateEntry = monthEntries.find(e => e.date === date);
+  const currentDateEntryKey = JSON.stringify(currentDateEntry ?? null);
+
   useEffect(() => {
     if (!employeeId) return;
     const existing = monthEntries.find(e => e.date === date);
@@ -163,9 +166,6 @@ export default function FillDay() {
     const [y, m, d] = date.split("-");
     return `${d}.${m}.${y}`;
   })();
-
-  const currentDateEntry = monthEntries.find(e => e.date === date);
-  const currentDateEntryKey = JSON.stringify(currentDateEntry ?? null);
 
   const regularSegs = segments.filter(s => !s.overtime);
   const overtimeSegs = segments.filter(s => s.overtime);
