@@ -123,13 +123,11 @@ router.get("/stats/unfilled-days", async (req, res): Promise<void> => {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
 
   const startDate = new Date(today.getFullYear(), today.getMonth() - months + 1, 1);
 
   const fromStr = startDate.toISOString().slice(0, 10);
-  const toStr = yesterday.toISOString().slice(0, 10);
+  const toStr = today.toISOString().slice(0, 10);
 
   const [employees, entries] = await Promise.all([
     db.select({ id: employeesTable.id, name: employeesTable.name }).from(employeesTable),
@@ -145,7 +143,7 @@ router.get("/stats/unfilled-days", async (req, res): Promise<void> => {
   const monthMap = new Map<string, Array<{ date: string; missingCount: number; totalEmployees: number; missingEmployees: Array<{ id: number; name: string }> }>>();
 
   const cur = new Date(startDate);
-  while (cur <= yesterday) {
+  while (cur <= today) {
     const dow = cur.getDay(); // 0=Sun
     if (dow !== 0) { // Mon-Sat
       const dateStr = cur.toISOString().slice(0, 10);
