@@ -222,22 +222,6 @@ export default function FillDay() {
 
       <div className="p-3 md:p-6 space-y-3">
 
-        {/* Баннер «Редактирование» */}
-        {isEditing && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-amber-800 text-sm">
-              <span className="text-base">✏️</span>
-              <span className="font-medium">Редактирование записи за {selectedDateLabel}</span>
-            </div>
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="text-xs text-red-600 font-medium hover:underline"
-            >
-              Удалить запись
-            </button>
-          </div>
-        )}
-
         {/* ─── Контролы: сотрудник + дата + тип ─── */}
         <div className="bg-card border border-border rounded-xl shadow-sm p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
