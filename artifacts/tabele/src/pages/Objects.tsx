@@ -108,12 +108,16 @@ export default function Objects() {
   const entryCountByObject = (id: number) =>
     entries.filter(e => e.type === "work" && (e.segments as Array<{ objectId: number }>).some(s => s.objectId === id)).length;
 
-  const filtered = objects.filter(o => {
-    const q = search.trim().toLowerCase();
-    const matchSearch = !q || o.name.toLowerCase().includes(q) || (o.code && o.code !== "-" && o.code.toLowerCase().includes(q));
-    const matchStatus = filterStatus === "all" || o.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
+  const STATUS_ORDER: Record<string, number> = { active: 0, regular: 1, closed: 2 };
+
+  const filtered = objects
+    .filter(o => {
+      const q = search.trim().toLowerCase();
+      const matchSearch = !q || o.name.toLowerCase().includes(q) || (o.code && o.code !== "-" && o.code.toLowerCase().includes(q));
+      const matchStatus = filterStatus === "all" || o.status === filterStatus;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99));
 
   const countByStatus = (s: string) => objects.filter(o => o.status === s).length;
 
