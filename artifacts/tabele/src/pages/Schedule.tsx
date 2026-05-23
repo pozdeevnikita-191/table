@@ -299,26 +299,67 @@ export default function Schedule() {
 
             {/* Modal body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {draftList.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Нет назначений на этот день
-                </p>
-              )}
+
+              {/* Quick employee chips */}
+              <div>
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+                  Добавить сотрудника
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {employees.map(emp => {
+                    const alreadyAdded = draftList.some(r => r.employeeId === emp.id);
+                    return (
+                      <button
+                        key={emp.id}
+                        onClick={() => {
+                          if (alreadyAdded) return;
+                          setDraftList(prev => [...prev, {
+                            key: draftKey,
+                            employeeId: emp.id,
+                            objectId: "",
+                            objectName: "",
+                            task: "",
+                          }]);
+                          setDraftKey(k => k + 1);
+                        }}
+                        disabled={alreadyAdded}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                          alreadyAdded
+                            ? "opacity-40 cursor-not-allowed border-border text-muted-foreground"
+                            : "border-border hover:border-primary hover:text-primary cursor-pointer"
+                        )}
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                          style={{ background: emp.color }}
+                        >
+                          {getInitials(emp.name)}
+                        </span>
+                        {emp.name.split(" ")[0]}
+                        {alreadyAdded && <span className="text-[9px]">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {draftList.length > 0 && <div className="border-t border-border" />}
+
               {draftList.map(row => {
                 const emp = employees.find(e => e.id === row.employeeId);
                 return (
                   <div key={row.key} className="flex gap-2 items-start p-3 bg-muted/30 rounded-lg border border-border">
-                    {/* Employee color dot */}
-                    {emp && (
-                      <span
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0 mt-0.5"
-                        style={{ background: emp.color }}
-                      >
-                        {getInitials(emp.name)}
-                      </span>
-                    )}
-                    <div className="flex-1 space-y-2 min-w-0">
-                      {/* Employee select */}
+                    {/* Employee color avatar */}
+                    <span
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5"
+                      style={{ background: emp?.color ?? "#aaa" }}
+                    >
+                      {emp ? getInitials(emp.name) : "?"}
+                    </span>
+
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      {/* Employee name (read-only label if set via chip, or dropdown) */}
                       <select
                         value={row.employeeId}
                         onChange={e => {
@@ -332,30 +373,32 @@ export default function Schedule() {
                           <option key={e.id} value={e.id}>{e.name}</option>
                         ))}
                       </select>
-                      {/* Object select + freeform */}
-                      <div className="flex gap-2">
-                        <select
-                          value={row.objectId}
-                          onChange={e => {
-                            const id = e.target.value === "" ? "" : parseInt(e.target.value);
-                            const obj = objects.find(o => o.id === id);
-                            updateRow(row.key, { objectId: id, objectName: obj?.name ?? row.objectName });
-                          }}
-                          className="flex-1 text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                        >
-                          <option value="">— Объект —</option>
-                          {objects.map(o => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          value={row.objectName}
-                          onChange={e => updateRow(row.key, { objectName: e.target.value, objectId: "" })}
-                          placeholder="или введите вручную"
-                          className="flex-1 text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                        />
-                      </div>
+
+                      {/* Object: dropdown */}
+                      <select
+                        value={row.objectId}
+                        onChange={e => {
+                          const id = e.target.value === "" ? "" : parseInt(e.target.value);
+                          const obj = objects.find(o => o.id === id);
+                          updateRow(row.key, { objectId: id, objectName: obj?.name ?? "" });
+                        }}
+                        className="w-full text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="">— Объект из списка —</option>
+                        {objects.map(o => (
+                          <option key={o.id} value={o.id}>{o.name}</option>
+                        ))}
+                      </select>
+
+                      {/* Object: freeform — full width, stacked below */}
+                      <input
+                        type="text"
+                        value={row.objectName}
+                        onChange={e => updateRow(row.key, { objectName: e.target.value, objectId: "" })}
+                        placeholder="или введите название вручную"
+                        className="w-full text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary text-muted-foreground placeholder:text-muted-foreground/60"
+                      />
+
                       {/* Task */}
                       <input
                         type="text"
@@ -365,6 +408,7 @@ export default function Schedule() {
                         className="w-full text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
+
                     <button
                       onClick={() => removeRow(row.key)}
                       className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 p-1 mt-0.5"
@@ -379,9 +423,9 @@ export default function Schedule() {
 
               <button
                 onClick={addRow}
-                className="w-full py-2 text-sm text-primary border border-dashed border-primary/40 rounded-lg hover:bg-primary/5 transition-colors font-medium"
+                className="w-full py-2 text-sm text-muted-foreground border border-dashed border-border rounded-lg hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors font-medium"
               >
-                + Добавить назначение
+                + Добавить строку вручную
               </button>
             </div>
 
