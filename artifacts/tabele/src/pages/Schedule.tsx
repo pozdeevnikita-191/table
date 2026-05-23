@@ -60,7 +60,7 @@ type DraftAssignment = {
 };
 
 function emptyDraft(key: number): DraftAssignment {
-  return { key, employeeIds: [], objectId: "", objectName: "", task: "", startTime: "", endTime: "" };
+  return { key, employeeIds: [], objectId: "", objectName: "", task: "", startTime: "10:00", endTime: "18:00" };
 }
 
 export default function Schedule() {
