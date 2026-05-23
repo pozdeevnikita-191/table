@@ -1,0 +1,73 @@
+Add a new "Schedule / Planning Calendar" page to the existing time tracking web app (single HTML file).
+Requirements:
+
+New nav item in the sidebar called "Расписание" (Schedule) with a calendar icon. It should open a full-page monthly calendar view.
+Full-page monthly calendar layout:
+
+The calendar takes up the full content area (no extra padding cards)
+7 columns (Mon–Sun), rows for each week of the month
+Each day cell is tall enough to show content (min-height ~110px)
+Navigation arrows to switch months (← →) in the topbar
+Today's date is highlighted with an accent border
+Weekends (Sat/Sun) have a slightly different background
+
+
+Day cell content:
+
+Day number in top-left corner
+Below it: compact colored chips/tags showing employee name + object name for each planned assignment that day
+If there are more than 3 assignments, show "...и ещё N" overflow label
+Chips should use the employee's color (already stored in state.employees[].color)
+The cell is clickable to open a day detail modal
+
+
+Separate data store for the schedule — do NOT reuse state.entries (that's for time tracking). Add a new state.schedule array with items like:
+
+js   {
+     id: string,
+     date: string,          // "YYYY-MM-DD"
+     assignments: [
+       {
+         employeeId: string,
+         objectId: string,   // can be empty string if freeform
+         objectName: string, // freeform text OR pulled from state.objects
+         task: string        // short task description, e.g. "Монтаж освещения"
+       }
+     ]
+   }
+Save and load from localStorage together with the rest of state.
+
+Day detail modal (opens on day cell click):
+
+Header: formatted date (e.g. "Пятница, 23 мая")
+List of existing assignments for that day, each showing:
+
+Employee name (colored badge)
+Object name
+Task description
+Delete (✕) button
+
+
+"+ Добавить" button that appends a new assignment row inline (without closing the modal):
+
+Dropdown: select employee (from state.employees)
+Dropdown OR text input: select object from state.objects OR type freeform name
+Text input: task description (placeholder "Задача / комментарий")
+
+
+"Сохранить" button saves all changes to state.schedule and refreshes the calendar
+Modal closes on overlay click or ✕ button
+
+
+Style rules:
+
+Assignment chips: border-radius: 4px, small font (11–12px), colored left border using employee color, white/surface background, truncated text with overflow: hidden; text-overflow: ellipsis; white-space: nowrap
+Calendar grid uses display: grid; grid-template-columns: repeat(7, 1fr) with gap: 1px and a light border around the whole grid
+Day cells: border: 1px solid var(--border), hover state changes background
+Keep all existing pages and functionality exactly as they are — only ADD new code
+
+
+Persist state.schedule in the same localStorage.setItem('tabele_state', ...) call that already saves state.employees, state.objects, and state.entries.
+The new page should feel like a team planning board — not a time log. Label it clearly: heading "План на месяц" at the top.
+
+Do not break any existing functionality. Add the new page cleanly alongside the existing ones.

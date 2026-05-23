@@ -389,3 +389,50 @@ export const GetReportResponse = zod.object({
 })
 
 
+/**
+ * @summary Get schedule days for a given month
+ */
+export const GetScheduleQueryParams = zod.object({
+  "year": zod.coerce.number(),
+  "month": zod.coerce.number()
+})
+
+export const GetScheduleResponseItem = zod.object({
+  "id": zod.number(),
+  "date": zod.string(),
+  "assignments": zod.array(zod.object({
+  "employeeId": zod.number(),
+  "objectId": zod.number().nullish(),
+  "objectName": zod.string(),
+  "task": zod.string()
+})),
+  "createdAt": zod.string()
+})
+export const GetScheduleResponse = zod.array(GetScheduleResponseItem)
+
+
+/**
+ * @summary Upsert assignments for a day
+ */
+export const upsertScheduleDayBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const UpsertScheduleDayBody = zod.object({
+  "date": zod.string().regex(upsertScheduleDayBodyDateRegExp),
+  "assignments": zod.array(zod.object({
+  "employeeId": zod.number(),
+  "objectId": zod.number().nullish(),
+  "objectName": zod.string(),
+  "task": zod.string()
+}))
+})
+
+
+/**
+ * @summary Delete all assignments for a day
+ */
+export const DeleteScheduleDayParams = zod.object({
+  "date": zod.coerce.string()
+})
+
+

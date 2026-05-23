@@ -3,15 +3,28 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Дашборд",          icon: DashboardIcon,  shortLabel: "Главная",  mobileNav: true },
-  { href: "/fill",      label: "Заполнить день",   icon: CalendarIcon,   shortLabel: "День",     mobileNav: true },
-  { href: "/unfilled",  label: "Незаполненные",    icon: AlertIcon,      shortLabel: "Пропуски", mobileNav: true },
-  { href: "/entries",   label: "Записи",            icon: ListIcon,       shortLabel: "Записи",   mobileNav: false },
-  { href: "/employees", label: "Сотрудники",        icon: UsersIcon,      shortLabel: "Люди",     mobileNav: true },
-  { href: "/reports",   label: "Отчёты",            icon: BarChartIcon,   shortLabel: "Отчёты",   mobileNav: true },
-  { href: "/objects",   label: "Объекты",           icon: BuildingIcon,   shortLabel: "Объекты",  mobileNav: false },
+  { href: "/dashboard",  label: "Дашборд",          icon: DashboardIcon,  shortLabel: "Главная",    mobileNav: true },
+  { href: "/fill",       label: "Заполнить день",   icon: CalendarIcon,   shortLabel: "День",       mobileNav: true },
+  { href: "/unfilled",   label: "Незаполненные",    icon: AlertIcon,      shortLabel: "Пропуски",   mobileNav: true },
+  { href: "/schedule",   label: "Расписание",       icon: ScheduleIcon,   shortLabel: "Расписание", mobileNav: true },
+  { href: "/entries",    label: "Записи",            icon: ListIcon,       shortLabel: "Записи",     mobileNav: false },
+  { href: "/employees",  label: "Сотрудники",        icon: UsersIcon,      shortLabel: "Люди",       mobileNav: false },
+  { href: "/reports",    label: "Отчёты",            icon: BarChartIcon,   shortLabel: "Отчёты",     mobileNav: true },
+  { href: "/objects",    label: "Объекты",           icon: BuildingIcon,   shortLabel: "Объекты",    mobileNav: false },
 ];
 
+function ScheduleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className ?? "w-5 h-5"}>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="8" y1="14" x2="8" y2="14" /><line x1="12" y1="14" x2="12" y2="14" />
+      <line x1="16" y1="14" x2="16" y2="14" />
+      <line x1="8" y1="18" x2="8" y2="18" /><line x1="12" y1="18" x2="12" y2="18" />
+    </svg>
+  );
+}
 function AlertIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className ?? "w-5 h-5"}>
@@ -153,7 +166,7 @@ export function Layout({ children, title, actions }: {
         <div className="flex-1 py-2 overflow-y-auto">
           <div className="py-2">
             <div className="px-4 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Основное</div>
-            {NAV_ITEMS.filter(i => ["/dashboard", "/fill", "/unfilled", "/entries", "/employees", "/objects"].includes(i.href)).map(item => (
+            {NAV_ITEMS.filter(i => ["/dashboard", "/fill", "/unfilled", "/schedule", "/entries", "/employees", "/objects"].includes(i.href)).map(item => (
               <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} />
             ))}
           </div>

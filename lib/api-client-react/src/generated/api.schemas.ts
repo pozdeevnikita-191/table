@@ -222,6 +222,26 @@ export interface ReportResult {
   totalDays: number;
 }
 
+export interface ScheduleAssignment {
+  employeeId: number;
+  objectId?: number | null;
+  objectName: string;
+  task: string;
+}
+
+export interface ScheduleDay {
+  id: number;
+  date: string;
+  assignments: ScheduleAssignment[];
+  createdAt: string;
+}
+
+export interface UpsertScheduleBody {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date: string;
+  assignments: ScheduleAssignment[];
+}
+
 export type ListEntriesParams = {
 employeeId?: number;
 from?: string;
@@ -248,5 +268,10 @@ employeeId?: number;
 objectId?: number;
 from?: string;
 to?: string;
+};
+
+export type GetScheduleParams = {
+year: number;
+month: number;
 };
 

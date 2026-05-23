@@ -17,6 +17,8 @@ tags:
     description: Time entries
   - name: stats
     description: Dashboard and analytics
+  - name: schedule
+    description: Team planning schedule
 
 paths:
   /healthz:
@@ -382,6 +384,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportResult"
+
+  # ── SCHEDULE ─────────────────────────────────────────────────────────────────
+  /schedule:
+    get:
+      operationId: getSchedule
+      tags: [schedule]
+      summary: Get schedule days for a given month
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduleDay"
+    post:
+      operationId: upsertScheduleDay
+      tags: [schedule]
+      summary: Upsert assignments for a day
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertScheduleBody"
+      responses:
+        "201":
+          description: Created/updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleDay"
+
+  /schedule/{date}:
+    delete:
+      operationId: deleteScheduleDay
+      tags: [schedule]
+      summary: Delete all assignments for a day
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 
 components:
   schemas:
@@ -755,3 +816,45 @@ components:
           type: boolean
         note:
           type: string
+
+    # ── SCHEDULE ─────────────────────────────────────────────────────────────────
+    ScheduleAssignment:
+      type: object
+      required: [employeeId, objectName, task]
+      properties:
+        employeeId:
+          type: integer
+        objectId:
+          type: integer
+          nullable: true
+        objectName:
+          type: string
+        task:
+          type: string
+
+    ScheduleDay:
+      type: object
+      required: [id, date, assignments, createdAt]
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        assignments:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleAssignment"
+        createdAt:
+          type: string
+
+    UpsertScheduleBody:
+      type: object
+      required: [date, assignments]
+      properties:
+        date:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        assignments:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleAssignment"

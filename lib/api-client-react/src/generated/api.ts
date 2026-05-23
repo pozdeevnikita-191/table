@@ -30,11 +30,14 @@ import type {
   EntryUpdate,
   GetDashboardStatsParams,
   GetReportParams,
+  GetScheduleParams,
   GetUnfilledDaysParams,
   HealthStatus,
   ListEntriesParams,
   ReportResult,
+  ScheduleDay,
   UnfilledDaysResult,
+  UpsertScheduleBody,
   WorkObject,
   WorkObjectInput,
   WorkObjectUpdate
@@ -1411,4 +1414,229 @@ export function useGetReport<TData = Awaited<ReturnType<typeof getReport>>, TErr
 
 
 
+
+export const getGetScheduleUrl = (params: GetScheduleParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/schedule?${stringifiedParams}` : `/api/schedule`
+}
+
+/**
+ * @summary Get schedule days for a given month
+ */
+export const getSchedule = async (params: GetScheduleParams, options?: RequestInit): Promise<ScheduleDay[]> => {
+
+  return customFetch<ScheduleDay[]>(getGetScheduleUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetScheduleQueryKey = (params?: GetScheduleParams,) => {
+    return [
+    `/api/schedule`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetScheduleQueryOptions = <TData = Awaited<ReturnType<typeof getSchedule>>, TError = ErrorType<unknown>>(params: GetScheduleParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSchedule>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetScheduleQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSchedule>>> = ({ signal }) => getSchedule(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSchedule>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetScheduleQueryResult = NonNullable<Awaited<ReturnType<typeof getSchedule>>>
+export type GetScheduleQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get schedule days for a given month
+ */
+
+export function useGetSchedule<TData = Awaited<ReturnType<typeof getSchedule>>, TError = ErrorType<unknown>>(
+ params: GetScheduleParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSchedule>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetScheduleQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpsertScheduleDayUrl = () => {
+
+
+
+
+  return `/api/schedule`
+}
+
+/**
+ * @summary Upsert assignments for a day
+ */
+export const upsertScheduleDay = async (upsertScheduleBody: UpsertScheduleBody, options?: RequestInit): Promise<ScheduleDay> => {
+
+  return customFetch<ScheduleDay>(getUpsertScheduleDayUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      upsertScheduleBody,)
+  }
+);}
+
+
+
+
+export const getUpsertScheduleDayMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertScheduleDay>>, TError,{data: BodyType<UpsertScheduleBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertScheduleDay>>, TError,{data: BodyType<UpsertScheduleBody>}, TContext> => {
+
+const mutationKey = ['upsertScheduleDay'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertScheduleDay>>, {data: BodyType<UpsertScheduleBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  upsertScheduleDay(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertScheduleDayMutationResult = NonNullable<Awaited<ReturnType<typeof upsertScheduleDay>>>
+    export type UpsertScheduleDayMutationBody = BodyType<UpsertScheduleBody>
+    export type UpsertScheduleDayMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upsert assignments for a day
+ */
+export const useUpsertScheduleDay = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertScheduleDay>>, TError,{data: BodyType<UpsertScheduleBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertScheduleDay>>,
+        TError,
+        {data: BodyType<UpsertScheduleBody>},
+        TContext
+      > => {
+      return useMutation(getUpsertScheduleDayMutationOptions(options));
+    }
+
+export const getDeleteScheduleDayUrl = (date: string,) => {
+
+
+
+
+  return `/api/schedule/${date}`
+}
+
+/**
+ * @summary Delete all assignments for a day
+ */
+export const deleteScheduleDay = async (date: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteScheduleDayUrl(date),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteScheduleDayMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteScheduleDay>>, TError,{date: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteScheduleDay>>, TError,{date: string}, TContext> => {
+
+const mutationKey = ['deleteScheduleDay'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteScheduleDay>>, {date: string}> = (props) => {
+          const {date} = props ?? {};
+
+          return  deleteScheduleDay(date,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteScheduleDayMutationResult = NonNullable<Awaited<ReturnType<typeof deleteScheduleDay>>>
+
+    export type DeleteScheduleDayMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete all assignments for a day
+ */
+export const useDeleteScheduleDay = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteScheduleDay>>, TError,{date: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteScheduleDay>>,
+        TError,
+        {date: string},
+        TContext
+      > => {
+      return useMutation(getDeleteScheduleDayMutationOptions(options));
+    }
 
