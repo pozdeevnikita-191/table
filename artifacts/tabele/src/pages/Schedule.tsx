@@ -355,21 +355,36 @@ export default function Schedule() {
 
                     {/* Time range */}
                     <div>
-                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Время</div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="time"
-                          value={row.startTime}
-                          onChange={e => updateRow(row.key, { startTime: e.target.value })}
-                          className="flex-1 text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                        />
-                        <span className="text-muted-foreground text-xs flex-shrink-0">—</span>
-                        <input
-                          type="time"
-                          value={row.endTime}
-                          onChange={e => updateRow(row.key, { endTime: e.target.value })}
-                          className="flex-1 text-sm border border-border rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                        />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Время</div>
+                        {row.startTime && row.endTime && (() => {
+                          const [sh, sm] = row.startTime.split(":").map(Number);
+                          const [eh, em] = row.endTime.split(":").map(Number);
+                          const hrs = Math.round(((eh * 60 + em) - (sh * 60 + sm)) / 60 * 10) / 10;
+                          return hrs > 0 ? (
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary">{hrs} ч</span>
+                          ) : null;
+                        })()}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Начало</label>
+                          <input
+                            type="time"
+                            value={row.startTime}
+                            onChange={e => updateRow(row.key, { startTime: e.target.value })}
+                            className="w-full px-2.5 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Конец</label>
+                          <input
+                            type="time"
+                            value={row.endTime}
+                            onChange={e => updateRow(row.key, { endTime: e.target.value })}
+                            className="w-full px-2.5 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:border-primary"
+                          />
+                        </div>
                       </div>
                     </div>
 
