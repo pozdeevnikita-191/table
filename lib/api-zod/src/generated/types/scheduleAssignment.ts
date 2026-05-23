@@ -7,8 +7,10 @@
  */
 
 export interface ScheduleAssignment {
-  employeeId: number;
+  employeeIds: number[];
   objectId?: number | null;
   objectName: string;
   task: string;
+  startTime?: string;
+  endTime?: string;
 }

@@ -2,10 +2,12 @@ import { pgTable, text, serial, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 
 export const assignmentSchema = z.object({
-  employeeId: z.number().int(),
+  employeeIds: z.array(z.number().int()),
   objectId: z.number().int().nullable().optional(),
   objectName: z.string(),
   task: z.string(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
 });
 
 export type Assignment = z.infer<typeof assignmentSchema>;

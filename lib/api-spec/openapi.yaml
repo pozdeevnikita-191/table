@@ -820,16 +820,22 @@ components:
     # ── SCHEDULE ─────────────────────────────────────────────────────────────────
     ScheduleAssignment:
       type: object
-      required: [employeeId, objectName, task]
+      required: [employeeIds, objectName, task]
       properties:
-        employeeId:
-          type: integer
+        employeeIds:
+          type: array
+          items:
+            type: integer
         objectId:
           type: integer
           nullable: true
         objectName:
           type: string
         task:
+          type: string
+        startTime:
+          type: string
+        endTime:
           type: string
 
     ScheduleDay:

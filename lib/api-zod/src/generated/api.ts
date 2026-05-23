@@ -401,10 +401,12 @@ export const GetScheduleResponseItem = zod.object({
   "id": zod.number(),
   "date": zod.string(),
   "assignments": zod.array(zod.object({
-  "employeeId": zod.number(),
+  "employeeIds": zod.array(zod.number()),
   "objectId": zod.number().nullish(),
   "objectName": zod.string(),
-  "task": zod.string()
+  "task": zod.string(),
+  "startTime": zod.string().optional(),
+  "endTime": zod.string().optional()
 })),
   "createdAt": zod.string()
 })
@@ -420,10 +422,12 @@ export const upsertScheduleDayBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}
 export const UpsertScheduleDayBody = zod.object({
   "date": zod.string().regex(upsertScheduleDayBodyDateRegExp),
   "assignments": zod.array(zod.object({
-  "employeeId": zod.number(),
+  "employeeIds": zod.array(zod.number()),
   "objectId": zod.number().nullish(),
   "objectName": zod.string(),
-  "task": zod.string()
+  "task": zod.string(),
+  "startTime": zod.string().optional(),
+  "endTime": zod.string().optional()
 }))
 })
 
