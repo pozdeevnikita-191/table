@@ -144,8 +144,8 @@ router.get("/stats/unfilled-days", async (req, res): Promise<void> => {
 
   const cur = new Date(startDate);
   while (cur <= today) {
-    const dow = cur.getDay(); // 0=Sun
-    if (dow !== 0) { // Mon-Sat
+    const dow = cur.getDay(); // 0=Sun, 6=Sat
+    if (dow !== 0 && dow !== 6) { // Mon-Fri only
       const dateStr = cur.toISOString().slice(0, 10);
       const month = dateStr.slice(0, 7);
       const missing = employees.filter(emp => !filled.has(`${emp.id}_${dateStr}`));
