@@ -4,7 +4,7 @@
 # Stage 1: deps — install the full pnpm workspace (all packages, all deps).
 # Also used as the base for the one-off "migrate" stage (drizzle-kit push).
 ##############################################################################
-FROM node:24-alpine AS deps
+FROM node:24-bookworm-slim AS deps
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY artifacts/api-server ./artifacts/api-server
 COPY artifacts/tabele ./artifacts/tabele
 COPY scripts ./scripts
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 ##############################################################################
 # Stage 2: build — compile the API server bundle and the frontend static site.
@@ -47,7 +47,7 @@ ENTRYPOINT ["pnpm", "run", "push"]
 # The API server is a single self-contained esbuild bundle; the frontend is
 # static files served by the same Express process.
 ##############################################################################
-FROM node:24-alpine AS runtime
+FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV STATIC_DIR=/app/public
