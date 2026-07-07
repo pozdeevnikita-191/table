@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:-postgres://tabele:tabele@db:5432/tabele}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tabele}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tabele}
+      POSTGRES_DB: ${POSTGRES_DB:-tabele}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tabele}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off job: applies the Drizzle schema to Postgres. Not part of the
+  # normal app lifecycle — run it manually after the first deploy, and again
+  # any time lib/db/src/schema changes:
+  #
+  #   docker compose run --rm migrate
+  #
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://tabele:tabele@db:5432/tabele}
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["tools"]
+
+volumes:
+  db-data:
